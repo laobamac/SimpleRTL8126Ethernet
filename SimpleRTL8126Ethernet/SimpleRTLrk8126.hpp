@@ -1499,6 +1499,7 @@ enum RTL8126_registers {
         MAC0            = 0x00,     /* Ethernet hardware address. */
         MAC4            = 0x04,
         MAR0            = 0x08,     /* Multicast filter. */
+        MAR1            = 0x0C,        /* Multicast filter. */
         CounterAddrLow      = 0x10,
         CounterAddrHigh     = 0x14,
         CustomLED       = 0x18,
@@ -2318,6 +2319,9 @@ struct r8126_irq {
 
 #endif /* DISABLED_CODE */
 
+#define RTL8126_RSS_KEY_SIZE     40  /* size of RSS Hash Key in bytes */
+#define RTL8126_MAX_INDIRECTION_TABLE_ENTRIES 128
+
 #pragma pack(1)
 struct rtl8126_regs {
         //00
@@ -2722,6 +2726,8 @@ struct rtl8126_private {
         u16 hw_ram_code_ver;
 
         u8 rtk_enable_diag;
+    
+        u8 RequireLSOPatch;
 
         u8 ShortPacketSwChecksum;
 
@@ -2752,6 +2758,8 @@ struct rtl8126_private {
 
         u8 random_mac;
 
+        u8 HwSuppGigaForceMode;
+    
         u16 phy_reg_aner;
         u16 phy_reg_anlpar;
         u16 phy_reg_gbsr;
@@ -2875,6 +2883,8 @@ struct rtl8126_private {
         MP_KCP_INFO MpKCPInfo;
         //Realwow--------------
 #endif //ENABLE_REALWOW_SUPPORT
+    u32 eee_adv_t;
+    u8 eee_enabled;
 
         struct ethtool_keee eee;
 
@@ -2933,6 +2943,11 @@ struct rtl8126_private {
         u16 TcamValidReg;
         u16 TcamMaAddrcOffset;
         u16 TcamVlanTagOffset;
+    
+    UInt32 hwoptimize;
+    UInt32 s0MagicPacket;
+    UInt32 configEEE;
+    UInt32 configASPM;
 };
 
 #if DISABLED_CODE
@@ -3079,6 +3094,67 @@ void rtl8126_dash2_disable_rx(struct rtl8126_private *tp);
 void rtl8126_dash2_enable_rx(struct rtl8126_private *tp);
 void rtl8126_hw_disable_mac_mcu_bps(struct net_device *dev);
 
+void rtl8126_disable_ocp_phy_power_saving(struct net_device *dev);
+
+int rtl8126_enable_eee_plus(struct rtl8126_private *tp);
+int rtl8126_disable_eee_plus(struct rtl8126_private *tp);
+int rtl8126_enable_eee(struct rtl8126_private *tp);
+int rtl8126_disable_eee(struct rtl8126_private *tp);
+
+void rtl8126_nic_reset(struct net_device *dev);
+void rtl8126_get_mac_version(struct rtl8126_private *tp);
+void rtl8126_xmii_reset_enable(struct net_device *dev);
+unsigned int rtl8126_xmii_reset_pending(struct net_device *dev);
+void rtl8126_get_bios_setting(struct net_device *dev);
+u32 rtl8126_get_hw_wol(struct net_device *dev);
+void rtl8126_set_hw_wol(struct net_device *dev, u32 wolopts);
+void rtl8126_hw_init(struct net_device *dev);
+int rtl8126_get_mac_address(struct net_device *dev);
+void rtl8126_phy_power_down(struct net_device *dev);
+void rtl8126_phy_restart_nway(struct net_device *dev);
+void rtl8126_phy_setup_force_mode(struct net_device *dev, u32 speed, u8 duplex);
+void rtl8126_disable_rxdvgate(struct net_device *dev);
+void rtl8126_powerup_pll(struct net_device *dev);
+void rtl8126_hw_ephy_config(struct net_device *dev);
+void rtl8126_hw_phy_config(struct net_device *dev);
+void rtl8126_hw_clear_timer_int(struct net_device *dev);
+void rtl8126_hw_clear_int_miti(struct net_device *dev);
+void rtl8126_clear_phy_ups_reg(struct net_device *dev);
+int rtl8126_is_ups_resume(struct net_device *dev);
+void rtl8126_clear_ups_resume_bit(struct net_device *dev);
+void rtl8126_wait_phy_ups_resume(struct net_device *dev, u16 PhyState);
+
+u32 rtl8126_csi_other_fun_read(struct rtl8126_private *tp, u8 multi_fun_sel_bit, u32 addr);
+void rtl8126_csi_other_fun_write(struct rtl8126_private *tp, u8 multi_fun_sel_bit, u32 addr, u32 value);
+
+void rtl8126_eeprom_type(struct rtl8126_private *tp);
+
+void set_offset70F(struct rtl8126_private *tp, u8 setting);
+void rtl8126_issue_offset_99_event(struct rtl8126_private *tp);
+
+void rtl8126_init_pci_offset_180(struct rtl8126_private *tp);
+void rtl8126_disable_pci_offset_180(struct rtl8126_private *tp);
+
+void ClearMcuAccessRegBit( struct rtl8126_private *tp, u16 addr, u16 mask);
+void SetMcuAccessRegBit(struct rtl8126_private *tp, u16 addr, u16 mask);
+void ClearEthPhyOcpBit(struct rtl8126_private *tp, u16 addr, u16 mask);
+void SetEthPhyOcpBit(struct rtl8126_private *tp,  u16 addr, u16 mask);
+void ClearAndSetEthPhyOcpBit(struct rtl8126_private *tp, u16 addr, u16 clearmask, u16 setmask);
+
+u32 mdio_direct_read_phy_ocp(struct rtl8126_private *tp, u16 RegAddr);
+void mdio_real_direct_write_phy_ocp(struct rtl8126_private *tp, u16 RegAddr, u16 value);
+void mdio_direct_write_phy_ocp(struct rtl8126_private *tp, u16 RegAddr, u16 value);
+
+void rtl8126_enable_exit_l1_mask(struct rtl8126_private *tp);
+void rtl8126_disable_exit_l1_mask(struct rtl8126_private *tp);
+void rtl8126_wait_ll_share_fifo_ready(struct net_device *dev);
+
+void rtl8126_init_hw_phy_mcu(struct net_device *dev);
+void rtl8126_set_hw_phy_before_init_phy_mcu(struct net_device *dev);
+void rtl8126_enable_phy_aldps(struct rtl8126_private *tp);
+bool rtl8126_set_phy_mcu_patch_request(struct rtl8126_private *tp);
+bool rtl8126_clear_phy_mcu_patch_request(struct rtl8126_private *tp);
+
 #if DISABLED_CODE
 
 void rtl8126_mark_to_asic(struct rtl8126_private *tp, struct RxDesc *desc, u32 rx_buf_sz);
@@ -3183,9 +3259,9 @@ struct RTLChipInfo {
     u32 jumbo_frame_sz;
 };
 
-void rtl8125_rar_set(struct rtl8125_private *tp, uint8_t *addr);
+void rtl8126_rar_set(struct rtl8126_private *tp, uint8_t *addr);
 
-#endif /* __R8125_H */
+#endif /* __R8126_H */
 
 //EEPROM opcodes
 #define RTL_EEPROM_READ_OPCODE      06
@@ -3196,15 +3272,15 @@ void rtl8125_rar_set(struct rtl8125_private *tp, uint8_t *addr);
 
 #define RTL_CLOCK_RATE  3
 
-void rtl8125_eeprom_type(struct rtl8125_private *tp);
-void rtl8125_eeprom_cleanup(struct rtl8125_private *tp);
-u16 rtl8125_eeprom_read_sc(struct rtl8125_private *tp, u16 reg);
-void rtl8125_eeprom_write_sc(struct rtl8125_private *tp, u16 reg, u16 data);
-void rtl8125_shift_out_bits(struct rtl8125_private *tp, int data, int count);
-u16 rtl8125_shift_in_bits(struct rtl8125_private *tp);
-void rtl8125_raise_clock(struct rtl8125_private *tp, u8 *x);
-void rtl8125_lower_clock(struct rtl8125_private *tp, u8 *x);
-void rtl8125_stand_by(struct rtl8125_private *tp);
-void rtl8125_set_eeprom_sel_low(struct rtl8125_private *tp);
+void rtl8126_eeprom_type(struct rtl8126_private *tp);
+void rtl8126_eeprom_cleanup(struct rtl8126_private *tp);
+u16 rtl8126_eeprom_read_sc(struct rtl8126_private *tp, u16 reg);
+void rtl8126_eeprom_write_sc(struct rtl8126_private *tp, u16 reg, u16 data);
+void rtl8126_shift_out_bits(struct rtl8126_private *tp, int data, int count);
+u16 rtl8126_shift_in_bits(struct rtl8126_private *tp);
+void rtl8126_raise_clock(struct rtl8126_private *tp, u8 *x);
+void rtl8126_lower_clock(struct rtl8126_private *tp, u8 *x);
+void rtl8126_stand_by(struct rtl8126_private *tp);
+void rtl8126_set_eeprom_sel_low(struct rtl8126_private *tp);
 
-#endif /* SimpleRTLrk8125_hpp */
+#endif /* SimpleRTLrk8126_hpp */

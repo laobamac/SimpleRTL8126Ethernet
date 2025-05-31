@@ -346,7 +346,7 @@ private:
     void configPhyHardware();
     void configPhyHardware8126a1();
     void configPhyHardware8126a2();
-    void configPhyHardware8126b1();
+    void configPhyHardware8126a3();
     void configPhyHardware8126b2();
 
     /* Descriptor related methods. */

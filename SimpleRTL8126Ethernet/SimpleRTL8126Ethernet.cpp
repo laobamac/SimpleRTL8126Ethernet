@@ -1280,15 +1280,14 @@ void SimpleRTL8126::checkLinkStatus()
         }
         setupRTL8126();
         
-        if (tp->mcfg == CFG_METHOD_2) {
+        if (tp->mcfg == CFG_METHOD_1) {
             if (ReadReg16(PHYstatus) & FullDup)
                 WriteReg32(TxConfig, (ReadReg32(TxConfig) | (BIT_24 | BIT_25)) & ~BIT_19);
             else
                 WriteReg32(TxConfig, (ReadReg32(TxConfig) | BIT_25) & ~(BIT_19 | BIT_24));
         }
 
-        if ((tp->mcfg == CFG_METHOD_2 || tp->mcfg == CFG_METHOD_3 ||
-             tp->mcfg == CFG_METHOD_4 || tp->mcfg == CFG_METHOD_5) &&
+        if ((tp->mcfg == CFG_METHOD_2 || tp->mcfg == CFG_METHOD_3) &&
             (ReadReg16(PHYstatus) & _10bps))
                 rtl8126_enable_eee_plus(tp);
 
@@ -1300,10 +1299,9 @@ void SimpleRTL8126::checkLinkStatus()
     } else {
         tp->phy_reg_anlpar = 0;
 
-        if (tp->mcfg == CFG_METHOD_2 ||
-            tp->mcfg == CFG_METHOD_3 ||
-            tp->mcfg == CFG_METHOD_4 ||
-            tp->mcfg == CFG_METHOD_5)
+        if (tp->mcfg == CFG_METHOD_1 ||
+            tp->mcfg == CFG_METHOD_2 ||
+            tp->mcfg == CFG_METHOD_3)
                 rtl8126_disable_eee_plus(tp);
 
         /* Stop watchdog and statistics updates. */
