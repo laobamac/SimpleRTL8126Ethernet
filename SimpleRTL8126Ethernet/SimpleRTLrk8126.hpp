@@ -1608,8 +1608,6 @@ enum RTL8126_registers {
         PLA_TXQ1_IDLE_CREDIT = 0x2504,
         SW_TAIL_PTR0_8126  = 0x2800,
         HW_CLO_PTR0_8126   = 0x2802,
-        SW_TAIL_PTR0_8126  = 0x2800,
-        HW_CLO_PTR0_8126   = 0x2800,
         RDSAR_Q1_LOW_8126  = 0x4000,
         RSS_CTRL_8126      = 0x4500,
         Q_NUM_CTRL_8126    = 0x4800,
@@ -2249,6 +2247,8 @@ enum r8126_sysfs_flag {
         R8126_SYSFS_FLAG_MAX
 };
 
+#if DISABLED_CODE
+
 struct rtl8126_tx_ring {
         void* priv;
         struct net_device *netdev;
@@ -2315,6 +2315,8 @@ struct r8126_irq {
         u8        requested;
         char        name[IFNAMSIZ + 10];
 };
+
+#endif /* DISABLED_CODE */
 
 #pragma pack(1)
 struct rtl8126_regs {
@@ -2556,6 +2558,9 @@ struct rtl8126_private {
         void __iomem *mmio_addr;    /* memory map physical address */
         struct pci_dev *pci_dev;    /* Index of PCI device */
         struct net_device *dev;
+    
+#if DISABLED_CODE
+    
         struct r8126_napi r8126napi[R8126_MAX_MSIX_VEC];
         struct r8126_irq irq_tbl[R8126_MAX_MSIX_VEC];
         unsigned int irq_nvecs;
@@ -2572,9 +2577,15 @@ struct rtl8126_private {
         u32 tx_udp_csum_cmd;
         u32 tx_ip_csum_cmd;
         u32 tx_ipv6_csum_cmd;
+    
+#endif /* DISABLED_CODE */
+    
         int max_jumbo_frame_size;
         int chipset;
         u32 mcfg;
+    
+#if DISABLED_CODE
+    
         //u32 cur_rx; /* Index into the Rx descriptor buffer of next Rx pkt. */
         //u32 cur_tx; /* Index into the Tx descriptor buffer of next Rx pkt. */
         //u32 dirty_rx;
@@ -2591,8 +2602,14 @@ struct rtl8126_private {
         unsigned rx_buf_page_size;
         u32 page_reuse_fail_cnt;
 #endif //ENABLE_PAGE_REUSE
+    
+#endif /* DISABLED_CODE */
+    
         u16 HwSuppNumTxQueues;
         u16 HwSuppNumRxQueues;
+    
+#if DISABLED_CODE
+    
         unsigned int num_tx_rings;
         unsigned int num_rx_rings;
         struct rtl8126_tx_ring tx_ring[R8126_MAX_TX_QUEUES];
@@ -2609,14 +2626,26 @@ struct rtl8126_private {
         unsigned int pci_cfg_is_read;
         unsigned int rtl8126_rx_config;
         u16 rms;
+    
+#endif /* DISABLED_CODE */
+    
         u16 cp_cmd;
+    
+#if DISABLED_CODE
+    
         u32 intr_mask;
         u32 timer_intr_mask;
         u16 isr_reg[R8126_MAX_MSIX_VEC];
         u16 imr_reg[R8126_MAX_MSIX_VEC];
+    
+#endif /* DISABLED_CODE */
+    
         int phy_auto_nego_reg;
         int phy_1000_ctrl_reg;
         int phy_2500_ctrl_reg;
+    
+#if DISABLED_CODE
+    
         u8 org_mac_addr[NODE_ADDRESS_SIZE];
         struct rtl8126_counters *tally_vaddr;
         dma_addr_t tally_paddr;
@@ -2624,6 +2653,9 @@ struct rtl8126_private {
 #ifdef CONFIG_R8126_VLAN
         struct vlan_group *vlgrp;
 #endif
+    
+#endif /* DISABLED_CODE */
+    
         u8  wol_enabled;
         u32 wol_opts;
         u8  efuse_ver;
@@ -2638,14 +2670,22 @@ struct rtl8126_private {
         u16 cur_page;
         u32 bios_setting;
 
+#if DISABLED_CODE
+    
         int (*set_speed)(struct net_device *, u8 autoneg, u32 speed, u8 duplex, u64 adv);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,6,0)
         void (*get_settings)(struct net_device *, struct ethtool_cmd *);
 #else
         void (*get_settings)(struct net_device *, struct ethtool_link_ksettings *);
 #endif
+    
+#endif /* DISABLED_CODE */
+    
         void (*phy_reset_enable)(struct net_device *);
         unsigned int (*phy_reset_pending)(struct net_device *);
+    
+#if DISABLED_CODE
+    
         unsigned int (*link_ok)(struct net_device *);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)
         struct work_struct reset_task;
@@ -2661,6 +2701,8 @@ struct rtl8126_private {
         DECLARE_BITMAP(task_flags, R8126_FLAG_MAX);
         unsigned features;
 
+#endif /* DISABLED_CODE */
+    
         u8 org_pci_offset_99;
         u8 org_pci_offset_180;
         u8 issue_offset_99_event;
@@ -2749,6 +2791,8 @@ struct rtl8126_private {
         void __iomem *mapped_cmac_ioaddr; /* mapped cmac memory map physical address */
         void __iomem *cmac_ioaddr; /* cmac memory map physical address */
 
+#if DISABLED_CODE
+    
 #ifdef ENABLE_DASH_SUPPORT
         u16 AfterRecvFromFwBufLen;
         u8 AfterRecvFromFwBuf[RECV_FROM_FW_BUF_SIZE];
@@ -2818,6 +2862,8 @@ struct rtl8126_private {
         //Dash-----------------
 #endif //ENABLE_DASH_SUPPORT
 
+#endif /* DISABLED_CODE */
+    
         //Realwow++++++++++++++
         u8 HwSuppKCPOffloadVer;
 
@@ -2889,6 +2935,8 @@ struct rtl8126_private {
         u16 TcamVlanTagOffset;
 };
 
+#if DISABLED_CODE
+
 #ifdef ENABLE_LIB_SUPPORT
 static inline unsigned int
 rtl8126_num_lib_tx_rings(struct rtl8126_private *tp)
@@ -2944,6 +2992,8 @@ static inline struct netdev_queue *txring_txq(const struct rtl8126_tx_ring *ring
 {
         return netdev_get_tx_queue(ring->netdev, ring->index);
 }
+
+#endif /* DISABLED_CODE */
 
 enum eetype {
         EEPROM_TYPE_NONE=0,
@@ -3028,6 +3078,9 @@ void rtl8126_dash2_enable_tx(struct rtl8126_private *tp);
 void rtl8126_dash2_disable_rx(struct rtl8126_private *tp);
 void rtl8126_dash2_enable_rx(struct rtl8126_private *tp);
 void rtl8126_hw_disable_mac_mcu_bps(struct net_device *dev);
+
+#if DISABLED_CODE
+
 void rtl8126_mark_to_asic(struct rtl8126_private *tp, struct RxDesc *desc, u32 rx_buf_sz);
 void rtl8126_mark_as_last_descriptor(struct rtl8126_private *tp, struct RxDesc *desc);
 
@@ -3073,6 +3126,9 @@ rtl8126_enable_hw_interrupt_v2(struct rtl8126_private *tp, u32 message_id)
 int rtl8126_open(struct net_device *dev);
 int rtl8126_close(struct net_device *dev);
 void rtl8126_hw_config(struct net_device *dev);
+
+#endif /* DISABLED_CODE */
+
 void rtl8126_hw_set_timer_int_8126(struct rtl8126_private *tp, u32 message_id, u8 timer_intmiti_val);
 void rtl8126_set_rx_q_num(struct rtl8126_private *tp, unsigned int num_rx_queues);
 void rtl8126_set_tx_q_num(struct rtl8126_private *tp, unsigned int num_tx_queues);
@@ -3119,7 +3175,17 @@ static inline void rtl8126_lib_reset_complete(struct rtl8126_private *tp) { }
     for (mclist = dev->mc_list; mclist; mclist = mclist->next)
 #endif
 
-#endif /* __R8126_H */
+struct RTLChipInfo {
+    const char *name;
+    u8 mcfg;
+    u32 RCR_Cfg;
+    u32 RxConfigMask;    /* Clears the bits supported by this chip */
+    u32 jumbo_frame_sz;
+};
+
+void rtl8125_rar_set(struct rtl8125_private *tp, uint8_t *addr);
+
+#endif /* __R8125_H */
 
 //EEPROM opcodes
 #define RTL_EEPROM_READ_OPCODE      06
@@ -3130,15 +3196,15 @@ static inline void rtl8126_lib_reset_complete(struct rtl8126_private *tp) { }
 
 #define RTL_CLOCK_RATE  3
 
-void rtl8126_eeprom_type(struct rtl8126_private *tp);
-void rtl8126_eeprom_cleanup(struct rtl8126_private *tp);
-u16 rtl8126_eeprom_read_sc(struct rtl8126_private *tp, u16 reg);
-void rtl8126_eeprom_write_sc(struct rtl8126_private *tp, u16 reg, u16 data);
-void rtl8126_shift_out_bits(struct rtl8126_private *tp, int data, int count);
-u16 rtl8126_shift_in_bits(struct rtl8126_private *tp);
-void rtl8126_raise_clock(struct rtl8126_private *tp, u8 *x);
-void rtl8126_lower_clock(struct rtl8126_private *tp, u8 *x);
-void rtl8126_stand_by(struct rtl8126_private *tp);
-void rtl8126_set_eeprom_sel_low(struct rtl8126_private *tp);
+void rtl8125_eeprom_type(struct rtl8125_private *tp);
+void rtl8125_eeprom_cleanup(struct rtl8125_private *tp);
+u16 rtl8125_eeprom_read_sc(struct rtl8125_private *tp, u16 reg);
+void rtl8125_eeprom_write_sc(struct rtl8125_private *tp, u16 reg, u16 data);
+void rtl8125_shift_out_bits(struct rtl8125_private *tp, int data, int count);
+u16 rtl8125_shift_in_bits(struct rtl8125_private *tp);
+void rtl8125_raise_clock(struct rtl8125_private *tp, u8 *x);
+void rtl8125_lower_clock(struct rtl8125_private *tp, u8 *x);
+void rtl8125_stand_by(struct rtl8125_private *tp);
+void rtl8125_set_eeprom_sel_low(struct rtl8125_private *tp);
 
-#endif /* SimpleRTLrk8126_hpp */
+#endif /* SimpleRTLrk8125_hpp */
