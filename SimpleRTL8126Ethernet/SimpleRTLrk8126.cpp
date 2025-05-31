@@ -3110,6 +3110,15 @@ void mdio_real_direct_write_phy_ocp(struct rtl8126_private *tp,
         }
 }
 
+void mdio_direct_write_phy_ocp(struct rtl8126_private *tp,
+                                      u16 RegAddr,
+                                      u16 value)
+{
+    if (tp->rtk_enable_diag) return;
+    
+    mdio_real_direct_write_phy_ocp(tp, RegAddr, value);
+}
+
 void rtl8126_mdio_direct_write_phy_ocp(struct rtl8126_private *tp,
                                        u16 RegAddr,
                                        u16 value)
@@ -3226,6 +3235,14 @@ static u32 rtl8126_mdio_read_phy_ocp(struct rtl8126_private *tp,
         return rtl8126_mdio_direct_read_phy_ocp(tp, ocp_addr);
 }
 */
+
+u32 mdio_direct_read_phy_ocp(struct rtl8126_private *tp,
+                                    u16 RegAddr)
+{
+    if (tp->rtk_enable_diag) return 0xffffffff;
+    
+    return mdio_real_direct_read_phy_ocp(tp, RegAddr);
+}
 
 static u32 rtl8126_mdio_real_read_phy_ocp(struct rtl8126_private *tp,
                 u16 PageNum,
@@ -3349,6 +3366,88 @@ u16 rtl8126_mac_ocp_read(struct rtl8126_private *tp, u16 reg_addr)
         data16 = (u16)RTL_R32(tp, MACOCP);
 
         return data16;
+}
+
+static void
+ClearAndSetMcuAccessRegBit(
+                           struct rtl8126_private *tp,
+                           u16   addr,
+                           u16   clearmask,
+                           u16   setmask
+                           )
+{
+    u16 PhyRegValue;
+    
+    PhyRegValue = rtl8126_mac_ocp_read(tp, addr);
+    PhyRegValue &= ~clearmask;
+    PhyRegValue |= setmask;
+    rtl8126_mac_ocp_write(tp, addr, PhyRegValue);
+}
+
+void
+ClearMcuAccessRegBit(
+                     struct rtl8126_private *tp,
+                     u16   addr,
+                     u16   mask
+                     )
+{
+    ClearAndSetMcuAccessRegBit(tp,
+                               addr,
+                               mask,
+                               0
+                               );
+}
+
+void
+SetMcuAccessRegBit(
+                   struct rtl8126_private *tp,
+                   u16   addr,
+                   u16   mask
+                   )
+{
+    ClearAndSetMcuAccessRegBit(tp,
+                               addr,
+                               0,
+                               mask
+                               );
+}
+
+static void ClearAndSetEthPhyBit(struct rtl8126_private *tp, u8  addr, u16 clearmask, u16 setmask)
+{
+    u16 PhyRegValue;
+    
+    PhyRegValue = rtl8126_mdio_read(tp, addr);
+    PhyRegValue &= ~clearmask;
+    PhyRegValue |= setmask;
+    rtl8126_mdio_write(tp, addr, PhyRegValue);
+}
+
+void ClearAndSetEthPhyOcpBit(struct rtl8126_private *tp, u16 addr, u16 clearmask, u16 setmask)
+{
+    u16 PhyRegValue;
+    
+    PhyRegValue = mdio_direct_read_phy_ocp(tp, addr);
+    PhyRegValue &= ~clearmask;
+    PhyRegValue |= setmask;
+    mdio_direct_write_phy_ocp(tp, addr, PhyRegValue);
+}
+
+void ClearEthPhyOcpBit(struct rtl8126_private *tp, u16 addr, u16 mask)
+{
+    ClearAndSetEthPhyOcpBit(tp,
+                            addr,
+                            mask,
+                            0
+                            );
+}
+
+void SetEthPhyOcpBit(struct rtl8126_private *tp,  u16 addr, u16 mask)
+{
+    ClearAndSetEthPhyOcpBit(tp,
+                            addr,
+                            0,
+                            mask
+                            );
 }
 
 #ifdef ENABLE_USE_FIRMWARE_FILE
@@ -4835,6 +4934,24 @@ rtl8126_set_link_option(struct rtl8126_private *tp,
 }
 
 #endif /* DISABLED_CODE */
+
+void
+rtl8126_disable_ocp_phy_power_saving(struct net_device *dev)
+{
+        struct rtl8126_private *tp = netdev_priv(dev);
+        u16 val;
+
+        if (tp->mcfg == CFG_METHOD_2 ||
+            tp->mcfg == CFG_METHOD_3) {
+                val = rtl8126_mdio_direct_read_phy_ocp(tp, 0xC416);
+                if (val != 0x0500) {
+                        rtl8126_set_phy_mcu_patch_request(tp);
+                        rtl8126_mdio_direct_write_phy_ocp(tp, 0xC416, 0x0000);
+                        rtl8126_mdio_direct_write_phy_ocp(tp, 0xC416, 0x0500);
+                        rtl8126_clear_phy_mcu_patch_request(tp);
+                }
+        }
+}
 
 void
 rtl8126_wait_ll_share_fifo_ready(struct net_device *dev)
@@ -11866,6 +11983,20 @@ rtl8126_netpoll(struct net_device *dev)
 
 #endif /* DISABLED_CODE */
 
+void
+rtl8126_get_bios_setting(struct net_device *dev)
+{
+    struct rtl8126_private *tp = netdev_priv(dev);
+    
+    switch (tp->mcfg) {
+        case CFG_METHOD_1:
+        case CFG_METHOD_2:
+        case CFG_METHOD_3:
+            tp->bios_setting = RTL_R32(tp, TimeInt2);
+            break;
+    }
+}
+
 #if DISABLED_CODE
 
 static void
@@ -12384,15 +12515,29 @@ rtl8126_set_mac_address(struct net_device *dev,
 
 #endif  /* DISABLED_CODE */
 
+void
+set_offset70F(struct rtl8126_private *tp, u8 setting)
+{
+    u32 csi_tmp;
+    u32 temp = (u32)setting;
+    temp = temp << 24;
+    /*set PCI configuration space offset 0x70F to setting*/
+    /*When the register offset of PCI configuration space larger than 0xff, use CSI to access it.*/
+    
+    csi_tmp = rtl8126_csi_read(tp, 0x70c) & 0x00ffffff;
+    rtl8126_csi_write(tp, 0x70c, csi_tmp | temp);
+}
+
 /******************************************************************************
  * rtl8126_rar_set - Puts an ethernet address into a receive address register.
  *
  * tp - The private data structure for driver
  * addr - Address to put into receive address register
  *****************************************************************************/
+
 void
 rtl8126_rar_set(struct rtl8126_private *tp,
-                const u8 *addr)
+                uint8_t *addr)
 {
         uint32_t rar_low = 0;
         uint32_t rar_high = 0;
@@ -17769,3 +17914,249 @@ static void rtl8126_link_task(void *_data)
         module_exit(rtl8126_cleanup_module);
         
 #endif /* DISABLED_CODE */
+
+#pragma mark --- EEPROM routines ---
+
+//-------------------------------------------------------------------
+//rtl8126_eeprom_type():
+//  tell the eeprom type
+//return value:
+//  0: the eeprom type is 93C46
+//  1: the eeprom type is 93C56 or 93C66
+//-------------------------------------------------------------------
+void rtl8126_eeprom_type(struct rtl8126_private *tp)
+{
+    u16 magic = 0;
+    
+    if (tp->mcfg == CFG_METHOD_DEFAULT)
+        goto out_no_eeprom;
+    
+    if(RTL_R8(tp, 0xD2)&0x04) {
+        //not support
+        //tp->eeprom_type = EEPROM_TWSI;
+        //tp->eeprom_len = 256;
+        goto out_no_eeprom;
+    } else if(RTL_R32(tp, RxConfig) & RxCfg_9356SEL) {
+        tp->eeprom_type = EEPROM_TYPE_93C56;
+        tp->eeprom_len = 256;
+    } else {
+        tp->eeprom_type = EEPROM_TYPE_93C46;
+        tp->eeprom_len = 128;
+    }
+    
+    magic = rtl8126_eeprom_read_sc(tp, 0);
+    
+out_no_eeprom:
+    if ((magic != 0x8129) && (magic != 0x8128)) {
+        tp->eeprom_type = EEPROM_TYPE_NONE;
+        tp->eeprom_len = 0;
+    }
+}
+
+void rtl8126_eeprom_cleanup(struct rtl8126_private *tp)
+{
+    u8 x;
+    
+    x = RTL_R8(tp, Cfg9346);
+    x &= ~(Cfg9346_EEDI | Cfg9346_EECS);
+    
+    RTL_W8(tp, Cfg9346, x);
+    
+    rtl8126_raise_clock(tp, &x);
+    rtl8126_lower_clock(tp, &x);
+}
+
+int rtl8126_eeprom_cmd_done(struct rtl8126_private *tp)
+{
+    u8 x;
+    int i;
+    
+    rtl8126_stand_by(tp);
+    
+    for (i = 0; i < 50000; i++) {
+        x = RTL_R8(tp, Cfg9346);
+        
+        if (x & Cfg9346_EEDO) {
+            udelay(RTL_CLOCK_RATE * 2 * 3);
+            return 0;
+        }
+        udelay(1);
+    }
+    
+    return -1;
+}
+
+//-------------------------------------------------------------------
+//rtl8126_eeprom_read_sc():
+//  read one word from eeprom
+//-------------------------------------------------------------------
+u16 rtl8126_eeprom_read_sc(struct rtl8126_private *tp, u16 reg)
+{
+    int addr_sz = 6;
+    u8 x;
+    u16 data;
+    
+    if(tp->eeprom_type == EEPROM_TYPE_NONE) {
+        return -1;
+    }
+    
+    if (tp->eeprom_type==EEPROM_TYPE_93C46)
+        addr_sz = 6;
+    else if (tp->eeprom_type==EEPROM_TYPE_93C56)
+        addr_sz = 8;
+    
+    x = Cfg9346_EEM1 | Cfg9346_EECS;
+    RTL_W8(tp, Cfg9346, x);
+    
+    rtl8126_shift_out_bits(tp, RTL_EEPROM_READ_OPCODE, 3);
+    rtl8126_shift_out_bits(tp, reg, addr_sz);
+    
+    data = rtl8126_shift_in_bits(tp);
+    
+    rtl8126_eeprom_cleanup(tp);
+    
+    RTL_W8(tp, Cfg9346, 0);
+    
+    return data;
+}
+
+//-------------------------------------------------------------------
+//rtl8126_eeprom_write_sc():
+//  write one word to a specific address in the eeprom
+//-------------------------------------------------------------------
+void rtl8126_eeprom_write_sc(struct rtl8126_private *tp, u16 reg, u16 data)
+{
+    u8 x;
+    int addr_sz = 6;
+    int w_dummy_addr = 4;
+    
+    if(tp->eeprom_type == EEPROM_TYPE_NONE) {
+        return ;
+    }
+    
+    if (tp->eeprom_type==EEPROM_TYPE_93C46) {
+        addr_sz = 6;
+        w_dummy_addr = 4;
+    } else if (tp->eeprom_type==EEPROM_TYPE_93C56) {
+        addr_sz = 8;
+        w_dummy_addr = 6;
+    }
+    
+    x = Cfg9346_EEM1 | Cfg9346_EECS;
+    RTL_W8(tp, Cfg9346, x);
+    
+    rtl8126_shift_out_bits(tp, RTL_EEPROM_EWEN_OPCODE, 5);
+    rtl8126_shift_out_bits(tp, reg, w_dummy_addr);
+    rtl8126_stand_by(tp);
+    
+    rtl8126_shift_out_bits(tp, RTL_EEPROM_ERASE_OPCODE, 3);
+    rtl8126_shift_out_bits(tp, reg, addr_sz);
+    if (rtl8126_eeprom_cmd_done(tp) < 0) {
+        return;
+    }
+    rtl8126_stand_by(tp);
+    
+    rtl8126_shift_out_bits(tp, RTL_EEPROM_WRITE_OPCODE, 3);
+    rtl8126_shift_out_bits(tp, reg, addr_sz);
+    rtl8126_shift_out_bits(tp, data, 16);
+    if (rtl8126_eeprom_cmd_done(tp) < 0) {
+        return;
+    }
+    rtl8126_stand_by(tp);
+    
+    rtl8126_shift_out_bits(tp, RTL_EEPROM_EWDS_OPCODE, 5);
+    rtl8126_shift_out_bits(tp, reg, w_dummy_addr);
+    
+    rtl8126_eeprom_cleanup(tp);
+    RTL_W8(tp, Cfg9346, 0);
+}
+
+void rtl8126_raise_clock(struct rtl8126_private *tp, u8 *x)
+{
+    *x = *x | Cfg9346_EESK;
+    RTL_W8(tp, Cfg9346, *x);
+    udelay(RTL_CLOCK_RATE);
+}
+
+void rtl8126_lower_clock(struct rtl8126_private *tp, u8 *x)
+{
+    
+    *x = *x & ~Cfg9346_EESK;
+    RTL_W8(tp, Cfg9346, *x);
+    udelay(RTL_CLOCK_RATE);
+}
+
+void rtl8126_shift_out_bits(struct rtl8126_private *tp, int data, int count)
+{
+    u8 x;
+    int  mask;
+    
+    mask = 0x01 << (count - 1);
+    x = RTL_R8(tp, Cfg9346);
+    x &= ~(Cfg9346_EEDI | Cfg9346_EEDO);
+    
+    do {
+        if (data & mask)
+            x |= Cfg9346_EEDI;
+        else
+            x &= ~Cfg9346_EEDI;
+        
+        RTL_W8(tp, Cfg9346, x);
+        udelay(RTL_CLOCK_RATE);
+        rtl8126_raise_clock(tp, &x);
+        rtl8126_lower_clock(tp, &x);
+        mask = mask >> 1;
+    } while(mask);
+    
+    x &= ~Cfg9346_EEDI;
+    RTL_W8(tp, Cfg9346, x);
+}
+
+u16 rtl8126_shift_in_bits(struct rtl8126_private *tp)
+{
+    u8 x;
+    u16 d, i;
+    
+    x = RTL_R8(tp, Cfg9346);
+    x &= ~(Cfg9346_EEDI | Cfg9346_EEDO);
+    
+    d = 0;
+    
+    for (i = 0; i < 16; i++) {
+        d = d << 1;
+        rtl8126_raise_clock(tp, &x);
+        
+        x = RTL_R8(tp, Cfg9346);
+        x &= ~Cfg9346_EEDI;
+        
+        if (x & Cfg9346_EEDO)
+            d |= 1;
+        
+        rtl8126_lower_clock(tp, &x);
+    }
+    
+    return d;
+}
+
+void rtl8126_stand_by(struct rtl8126_private *tp)
+{
+    u8 x;
+    
+    x = RTL_R8(tp, Cfg9346);
+    x &= ~(Cfg9346_EECS | Cfg9346_EESK);
+    RTL_W8(tp, Cfg9346, x);
+    udelay(RTL_CLOCK_RATE);
+    
+    x |= Cfg9346_EECS;
+    RTL_W8(tp, Cfg9346, x);
+}
+
+void rtl8126_set_eeprom_sel_low(struct rtl8126_private *tp)
+{
+    RTL_W8(tp, Cfg9346, Cfg9346_EEM1);
+    RTL_W8(tp, Cfg9346, Cfg9346_EEM1 | Cfg9346_EESK);
+    
+    udelay(20);
+    
+    RTL_W8(tp, Cfg9346, Cfg9346_EEM1);
+}

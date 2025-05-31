@@ -3150,7 +3150,6 @@ void rtl8126_disable_exit_l1_mask(struct rtl8126_private *tp);
 void rtl8126_wait_ll_share_fifo_ready(struct net_device *dev);
 
 void rtl8126_init_hw_phy_mcu(struct net_device *dev);
-void rtl8126_set_hw_phy_before_init_phy_mcu(struct net_device *dev);
 void rtl8126_enable_phy_aldps(struct rtl8126_private *tp);
 bool rtl8126_set_phy_mcu_patch_request(struct rtl8126_private *tp);
 bool rtl8126_clear_phy_mcu_patch_request(struct rtl8126_private *tp);
