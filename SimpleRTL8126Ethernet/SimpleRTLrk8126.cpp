@@ -3126,6 +3126,38 @@ void rtl8126_mdio_direct_write_phy_ocp(struct rtl8126_private *tp,
         mdio_real_direct_write_phy_ocp(tp, RegAddr, value);
 }
 
+static u32 mdio_real_direct_read_phy_ocp(struct rtl8126_private *tp,
+                                         u16 RegAddr)
+{
+    u32 data32;
+    int i, value = 0;
+    
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,18)
+    WARN_ON_ONCE(RegAddr % 2);
+#endif
+    data32 = RegAddr/2;
+    data32 <<= OCPR_Addr_Reg_shift;
+    
+    RTL_W32(tp, PHYOCP, data32);
+    for (i = 0; i < 100; i++) {
+        udelay(1);
+        
+        if (RTL_R32(tp, PHYOCP) & OCPR_Flag)
+            break;
+    }
+    value = RTL_R32(tp, PHYOCP) & OCPDR_Data_Mask;
+    
+    return value;
+}
+
+u32 mdio_direct_read_phy_ocp(struct rtl8126_private *tp,
+                                    u16 RegAddr)
+{
+    if (tp->rtk_enable_diag) return 0xffffffff;
+    
+    return mdio_real_direct_read_phy_ocp(tp, RegAddr);
+}
+
 /*
 static void rtl8126_mdio_write_phy_ocp(struct rtl8126_private *tp,
                                        u16 PageNum,
@@ -3187,30 +3219,6 @@ void rtl8126_mdio_prot_direct_write_phy_ocp(struct rtl8126_private *tp,
         mdio_real_direct_write_phy_ocp(tp, RegAddr, value);
 }
 
-static u32 mdio_real_direct_read_phy_ocp(struct rtl8126_private *tp,
-                u16 RegAddr)
-{
-    u32 data32;
-    int i, value = 0;
-    
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,18)
-    WARN_ON_ONCE(RegAddr % 2);
-#endif
-    data32 = RegAddr/2;
-    data32 <<= OCPR_Addr_Reg_shift;
-    
-    RTL_W32(tp, PHYOCP, data32);
-    for (i = 0; i < 100; i++) {
-        udelay(1);
-        
-        if (RTL_R32(tp, PHYOCP) & OCPR_Flag)
-            break;
-    }
-    value = RTL_R32(tp, PHYOCP) & OCPDR_Data_Mask;
-    
-    return value;
-}
-
 u32 rtl8126_mdio_direct_read_phy_ocp(struct rtl8126_private *tp,
                                      u16 RegAddr)
 {
@@ -3269,6 +3277,15 @@ u32 rtl8126_mdio_prot_direct_read_phy_ocp(struct rtl8126_private *tp,
                 u32 RegAddr)
 {
         return mdio_real_direct_read_phy_ocp(tp, RegAddr);
+}
+
+void mdio_direct_write_phy_ocp(struct rtl8126_private *tp,
+                                      u16 RegAddr,
+                                      u16 value)
+{
+    if (tp->rtk_enable_diag) return;
+    
+    mdio_real_direct_write_phy_ocp(tp, RegAddr, value);
 }
 
 static void rtl8126_clear_and_set_eth_phy_bit(struct rtl8126_private *tp, u8  addr, u16 clearmask, u16 setmask)
@@ -3355,6 +3372,78 @@ u16 rtl8126_mac_ocp_read(struct rtl8126_private *tp, u16 reg_addr)
         data16 = (u16)RTL_R32(tp, MACOCP);
 
         return data16;
+}
+
+void ClearAndSetEthPhyOcpBit(struct rtl8126_private *tp, u16 addr, u16 clearmask, u16 setmask)
+{
+    u16 PhyRegValue;
+    
+    PhyRegValue = mdio_direct_read_phy_ocp(tp, addr);
+    PhyRegValue &= ~clearmask;
+    PhyRegValue |= setmask;
+    mdio_direct_write_phy_ocp(tp, addr, PhyRegValue);
+}
+
+void ClearEthPhyOcpBit(struct rtl8126_private *tp, u16 addr, u16 mask)
+{
+    ClearAndSetEthPhyOcpBit(tp,
+                            addr,
+                            mask,
+                            0
+                            );
+}
+
+void SetEthPhyOcpBit(struct rtl8126_private *tp,  u16 addr, u16 mask)
+{
+    ClearAndSetEthPhyOcpBit(tp,
+                            addr,
+                            0,
+                            mask
+                            );
+}
+
+static void
+ClearAndSetMcuAccessRegBit(
+                           struct rtl8126_private *tp,
+                           u16   addr,
+                           u16   clearmask,
+                           u16   setmask
+                           )
+{
+    u16 PhyRegValue;
+    
+    PhyRegValue = rtl8126_mac_ocp_read(tp, addr);
+    PhyRegValue &= ~clearmask;
+    PhyRegValue |= setmask;
+    rtl8126_mac_ocp_write(tp, addr, PhyRegValue);
+}
+
+void
+ClearMcuAccessRegBit(
+                     struct rtl8126_private *tp,
+                     u16   addr,
+                     u16   mask
+                     )
+{
+    ClearAndSetMcuAccessRegBit(tp,
+                               addr,
+                               mask,
+                               0
+                               );
+}
+
+void
+SetMcuAccessRegBit(
+                   struct rtl8126_private *tp,
+                   u16   addr,
+                   u16   mask
+                   )
+{
+    ClearAndSetMcuAccessRegBit(tp,
+                               addr,
+                               0,
+                               mask
+                               );
 }
 
 #ifdef ENABLE_USE_FIRMWARE_FILE
@@ -7282,7 +7371,9 @@ rtl8126_tally_counter_clear(struct rtl8126_private *tp)
         RTL_W32(tp, CounterAddrLow, ((u64)tp->tally_paddr & (DMA_BIT_MASK(32))) | CounterReset);
 }
 
-static void
+#endif /* DISABLED_CODE */
+
+void
 rtl8126_clear_phy_ups_reg(struct net_device *dev)
 {
         struct rtl8126_private *tp = netdev_priv(dev);
@@ -7291,7 +7382,7 @@ rtl8126_clear_phy_ups_reg(struct net_device *dev)
         rtl8126_clear_eth_phy_ocp_bit(tp, 0xA468, BIT_3 | BIT_1);
 }
 
-static int
+int
 rtl8126_is_ups_resume(struct net_device *dev)
 {
         struct rtl8126_private *tp = netdev_priv(dev);
@@ -7299,7 +7390,7 @@ rtl8126_is_ups_resume(struct net_device *dev)
         return (rtl8126_mac_ocp_read(tp, 0xD42C) & BIT_8);
 }
 
-static void
+void
 rtl8126_clear_ups_resume_bit(struct net_device *dev)
 {
         struct rtl8126_private *tp = netdev_priv(dev);
@@ -7307,13 +7398,13 @@ rtl8126_clear_ups_resume_bit(struct net_device *dev)
         rtl8126_clear_mac_ocp_bit(tp, 0xD42C, BIT_8);
 }
 
-static u8
+u8
 rtl8126_get_phy_state(struct rtl8126_private *tp)
 {
         return (rtl8126_mdio_direct_read_phy_ocp(tp, 0xA420) & 0x7);
 }
 
-static void
+void
 rtl8126_wait_phy_ups_resume(struct net_device *dev, u16 PhyState)
 {
         struct rtl8126_private *tp = netdev_priv(dev);
@@ -7344,6 +7435,8 @@ rtl8126_disable_now_is_oob(struct rtl8126_private *tp)
         if (tp->HwSuppNowIsOobVer == 1)
                 RTL_W8(tp, MCUCmd_reg, RTL_R8(tp, MCUCmd_reg) & ~Now_is_oob);
 }
+
+#if DISABLED_CODE
 
 static void
 rtl8126_exit_oob(struct net_device *dev)
@@ -11013,6 +11106,19 @@ rtl8126_enable_phy_aldps(struct rtl8126_private *tp)
         rtl8126_set_eth_phy_ocp_bit(tp, 0xA430, BIT_2);
 }
 
+void
+set_offset70F(struct rtl8126_private *tp, u8 setting)
+{
+    u32 csi_tmp;
+    u32 temp = (u32)setting;
+    temp = temp << 24;
+    /*set PCI configuration space offset 0x70F to setting*/
+    /*When the register offset of PCI configuration space larger than 0xff, use CSI to access it.*/
+    
+    csi_tmp = rtl8126_csi_read(tp, 0x70c) & 0x00ffffff;
+    rtl8126_csi_write(tp, 0x70c, csi_tmp | temp);
+}
+
 #if DISABLED_CODE
 
 static void
@@ -11861,6 +11967,39 @@ static inline void rtl8126_request_link_timer(struct net_device *dev)
 
 #if DISABLED_CODE
 
+void
+rtl8126_set_hw_phy_before_init_phy_mcu(struct net_device *dev)
+{
+    struct rtl8126_private *tp = netdev_priv(dev);
+    u16 PhyRegValue;
+    
+    switch (tp->mcfg) {
+        case CFG_METHOD_4:
+            mdio_direct_write_phy_ocp(tp, 0xBF86, 0x9000);
+            
+            SetEthPhyOcpBit(tp, 0xC402, BIT_10);
+            ClearEthPhyOcpBit(tp, 0xC402, BIT_10);
+            
+            PhyRegValue = mdio_direct_read_phy_ocp(tp, 0xBF86);
+            PhyRegValue &= (BIT_1 | BIT_0);
+            if (PhyRegValue != 0)
+                dprintk("PHY watch dog not clear, value = 0x%x \n", PhyRegValue);
+            
+            mdio_direct_write_phy_ocp(tp, 0xBD86, 0x1010);
+            mdio_direct_write_phy_ocp(tp, 0xBD88, 0x1010);
+            
+            ClearAndSetEthPhyOcpBit(tp,
+                                    0xBD4E,
+                                    BIT_11 | BIT_10,
+                                    BIT_11);
+            ClearAndSetEthPhyOcpBit(tp,
+                                    0xBF46,
+                                    BIT_11 | BIT_10 | BIT_9 | BIT_8,
+                                    BIT_10 | BIT_9 | BIT_8);
+            break;
+    }
+}
+
 #ifdef CONFIG_NET_POLL_CONTROLLER
 /*
  * Polling 'interrupt' - used by things like netconsole to send skbs
@@ -11890,6 +12029,24 @@ rtl8126_netpoll(struct net_device *dev)
         }
 }
 #endif //CONFIG_NET_POLL_CONTROLLER
+
+#endif /* DISABLE_CODE */
+
+void
+rtl8126_get_bios_setting(struct net_device *dev)
+{
+    struct rtl8126_private *tp = netdev_priv(dev);
+    
+    switch (tp->mcfg) {
+        case CFG_METHOD_1:
+        case CFG_METHOD_2:
+        case CFG_METHOD_3:
+            tp->bios_setting = RTL_R32(tp, TimeInt2);
+            break;
+    }
+}
+
+#if DIASABLE_CODE
 
 static void
 rtl8126_setup_interrupt_mask(struct rtl8126_private *tp)
@@ -12401,15 +12558,18 @@ rtl8126_set_mac_address(struct net_device *dev,
         return 0;
 }
 
+#endif /* DISABLE_CODE */
+
 /******************************************************************************
  * rtl8126_rar_set - Puts an ethernet address into a receive address register.
  *
  * tp - The private data structure for driver
  * addr - Address to put into receive address register
  *****************************************************************************/
+
 void
 rtl8126_rar_set(struct rtl8126_private *tp,
-                const u8 *addr)
+                u8 *addr)
 {
         uint32_t rar_low = 0;
         uint32_t rar_high = 0;
@@ -12428,6 +12588,8 @@ rtl8126_rar_set(struct rtl8126_private *tp,
 
         rtl8126_disable_cfg9346_write(tp);
 }
+
+#if DISABLE_CODE
 
 #ifdef ETHTOOL_OPS_COMPAT
 static int ethtool_get_settings(struct net_device *dev, void *useraddr)
@@ -13231,7 +13393,9 @@ rtl8126_do_ioctl(struct net_device *dev,
         return ret;
 }
 
-static void
+#endif /* DISABLE_CODE*/
+
+void
 rtl8126_phy_power_up(struct net_device *dev)
 {
         struct rtl8126_private *tp = netdev_priv(dev);
@@ -13251,7 +13415,7 @@ rtl8126_phy_power_up(struct net_device *dev)
         spin_unlock_irqrestore(&tp->phy_lock, flags);
 }
 
-static void
+void
 rtl8126_phy_power_down(struct net_device *dev)
 {
         struct rtl8126_private *tp = netdev_priv(dev);
@@ -13267,6 +13431,8 @@ rtl8126_phy_power_down(struct net_device *dev)
         rtl8126_mdio_write(tp, MII_BMCR, BMCR_ANENABLE | BMCR_PDOWN);
         spin_unlock_irqrestore(&tp->phy_lock, flags);
 }
+
+#if DISABLE_CODE
 
 static int __devinit
 rtl8126_init_board(struct pci_dev *pdev,

@@ -1328,7 +1328,7 @@ void SimpleRTL8126::configPhyHardware()
     
     if (HW_DASH_SUPPORT_TYPE_3(tp) && tp->HwPkgDet == 0x06) return;
     
-    rtl8126_set_hw_phy_before_init_phy_mcu(tp);
+    //rtl8126_set_hw_phy_before_init_phy_mcu(tp);
     
     rtl8126_init_hw_phy_mcu(tp);
     
