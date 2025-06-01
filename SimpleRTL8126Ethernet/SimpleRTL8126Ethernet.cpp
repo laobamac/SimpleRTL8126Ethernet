@@ -990,7 +990,18 @@ IOReturn SimpleRTL8126::selectMedium(const IONetworkMedium *medium)
                 speed = SPEED_2500;
                 duplex = DUPLEX_FULL;
                 flowCtl = kFlowControlOn;
-                break;                
+                break;
+                
+            case MEDIUM_INDEX_5000FD:
+                speed = SPEED_5000;
+                duplex = DUPLEX_FULL;
+                break;
+                
+            case MEDIUM_INDEX_5000FDFC:
+                speed = SPEED_5000;
+                duplex = DUPLEX_FULL;
+                flowCtl = kFlowControlOn;
+                break;
         }
         //setPhyMedium();
         setCurrentMedium(medium);
@@ -1264,7 +1275,10 @@ void SimpleRTL8126::checkLinkStatus()
         } else {
             flowCtl = kFlowControlOff;
         }
-        if (currLinkState & _2500bpsF) {
+        if (currLinkState & _5000bpsF){
+            speed = SPEED_5000;
+            duplex = DUPLEX_FULL;
+        } else if (currLinkState & _2500bpsF) {
             speed = SPEED_2500;
             duplex = DUPLEX_FULL;
         } else if (currLinkState & _1000bpsF) {
@@ -1289,7 +1303,7 @@ void SimpleRTL8126::checkLinkStatus()
         }
         setupRTL8126();
         
-        if (tp->mcfg == CFG_METHOD_2) {
+        if (tp->mcfg == CFG_METHOD_1) {
             if (ReadReg16(PHYstatus) & FullDup)
                 WriteReg32(TxConfig, (ReadReg32(TxConfig) | (BIT_24 | BIT_25)) & ~BIT_19);
             else
@@ -1485,6 +1499,7 @@ inline void SimpleRTL8126::getChecksumResult(mbuf_t m, UInt32 status1, UInt32 st
         mbuf_set_csum_performed(m, performed, value);
 }
 
+static const char *speed5GName = "5 Gigabit";
 static const char *speed25GName = "2.5 Gigabit";
 static const char *speed1GName = "1 Gigabit";
 static const char *speed100MName = "100 Megabit";
@@ -1517,7 +1532,18 @@ void SimpleRTL8126::setLinkUp()
     } else {
         flowName = offFlowName;
     }
-    if (speed == SPEED_2500) {
+    
+    if (speed == SPEED_5000) {
+        mediumSpeed = kSpeed5000MBit;
+        speedName = speed5GName;
+        duplexName = duplexFullName;
+       
+        if (flowCtl == kFlowControlOn) {
+            mediumIndex = MEDIUM_INDEX_5000FDFC;
+        } else {
+            mediumIndex = MEDIUM_INDEX_5000FD;
+        }
+    } else if (speed == SPEED_2500) {
         mediumSpeed = kSpeed2500MBit;
         speedName = speed25GName;
         duplexName = duplexFullName;
@@ -1608,7 +1634,7 @@ void SimpleRTL8126::setLinkUp()
         pParams.lowThresholdBytes = 0x1000;
         pParams.highThresholdBytes = 0x10000;
         
-        if (speed == SPEED_2500)
+        if (speed == SPEED_2500 || speed == SPEED_5000)
             pParams.pollIntervalTime = pollInterval2500;
         else if (speed == SPEED_1000)
             pParams.pollIntervalTime = 170000;   /* 170µs */

@@ -55,12 +55,15 @@ enum
     MEDIUM_INDEX_1000FDFCEEE,
     MEDIUM_INDEX_2500FD,
     MEDIUM_INDEX_2500FDFC,
+    MEDIUM_INDEX_5000FD,
+    MEDIUM_INDEX_5000FDFC,
     MEDIUM_INDEX_COUNT
 };
 
 #define MBit 1000000ULL
 
 enum {
+    kSpeed5000MBit = 5000*MBit,
     kSpeed2500MBit = 2500*MBit,
     kSpeed1000MBit = 1000*MBit,
     kSpeed100MBit = 100*MBit,
@@ -355,8 +358,7 @@ private:
     void configPhyHardware();
     void configPhyHardware8126a1();
     void configPhyHardware8126a2();
-    void configPhyHardware8126b1();
-    void configPhyHardware8126b2();
+    void configPhyHardware8126a3();
 
     /* Descriptor related methods. */
     inline void getChecksumResult(mbuf_t m, UInt32 status1, UInt32 status2);

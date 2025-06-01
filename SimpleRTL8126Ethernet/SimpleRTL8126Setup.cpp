@@ -108,9 +108,9 @@ void SimpleRTL8126::getParams()
         pollInterval2500 = 0;
     }
     if (versionString)
-        IOLog("SimpleRTL8126Ethernet version %s starting. Please don't support tonymacx86.com!\n", versionString->getCStringNoCopy());
+        IOLog("SimpleRTL8126Ethernet version %s starting. Good luck to you!\n", versionString->getCStringNoCopy());
     else
-        IOLog("SimpleRTL8126Ethernet starting. Please don't support tonymacx86.com!\n");
+        IOLog("SimpleRTL8126Ethernet starting. laobamac gave you bless.\n");
 }
 
 static IOMediumType mediumTypeArray[MEDIUM_INDEX_COUNT] = {
@@ -127,7 +127,9 @@ static IOMediumType mediumTypeArray[MEDIUM_INDEX_COUNT] = {
     (kIOMediumEthernet1000BaseT | kIOMediumOptionFullDuplex | kIOMediumOptionEEE),
     (kIOMediumEthernet1000BaseT | kIOMediumOptionFullDuplex | kIOMediumOptionFlowControl | kIOMediumOptionEEE),
     (kIOMediumEthernet2500BaseT | kIOMediumOptionFullDuplex),
-    (kIOMediumEthernet2500BaseT | kIOMediumOptionFullDuplex | kIOMediumOptionFlowControl)
+    (kIOMediumEthernet2500BaseT | kIOMediumOptionFullDuplex | kIOMediumOptionFlowControl),
+    (kIOMediumEthernet5000BaseT | kIOMediumOptionFullDuplex),
+    (kIOMediumEthernet5000BaseT | kIOMediumOptionFullDuplex | kIOMediumOptionFlowControl)
 };
 
 static UInt64 mediumSpeedArray[MEDIUM_INDEX_COUNT] = {
@@ -145,6 +147,8 @@ static UInt64 mediumSpeedArray[MEDIUM_INDEX_COUNT] = {
     1000 * MBit,
     2500 * MBit,
     2500 * MBit,
+    5000 * MBit,
+    5000 * MBit,
 };
 
 bool SimpleRTL8126::setupMediumDict()

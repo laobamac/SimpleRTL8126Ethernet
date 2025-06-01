@@ -169,9 +169,13 @@ static struct pci_device_id rtl8126_pci_tbl[] = {
 
 MODULE_DEVICE_TABLE(pci, rtl8126_pci_tbl);
 
+#endif /* DISABLED_CODE */
+
 static int use_dac = 1;
 static int timer_count = 0x2600;
 static int timer_count_v2 = (0x2600 / 0x100);
+
+#if DISABLED_CODE
 
 static struct {
         u32 msg_enable;
@@ -4846,6 +4850,25 @@ rtl8126_set_link_option(struct rtl8126_private *tp,
 #endif /* DISABLED_CODE */
 
 void
+rtl8126_disable_ocp_phy_power_saving(struct net_device *dev)
+{
+        struct rtl8126_private *tp = netdev_priv(dev);
+        u16 val;
+
+        if (tp->mcfg == CFG_METHOD_1 ||
+            tp->mcfg == CFG_METHOD_2 ||
+            tp->mcfg == CFG_METHOD_3) {
+                val = rtl8126_mdio_direct_read_phy_ocp(tp, 0xC416);
+                if (val != 0x0500) {
+                        rtl8126_set_phy_mcu_patch_request(tp);
+                        rtl8126_mdio_direct_write_phy_ocp(tp, 0xC416, 0x0000);
+                        rtl8126_mdio_direct_write_phy_ocp(tp, 0xC416, 0x0500);
+                        rtl8126_clear_phy_mcu_patch_request(tp);
+                }
+        }
+}
+
+void
 rtl8126_wait_ll_share_fifo_ready(struct net_device *dev)
 {
         struct rtl8126_private *tp = netdev_priv(dev);
@@ -4968,13 +4991,13 @@ rtl8126_set_pci_99_exit_driver_para(struct net_device *dev)
 
 #endif  /* DISABLED_CODE */
 
-static void
+void
 rtl8126_enable_cfg9346_write(struct rtl8126_private *tp)
 {
         RTL_W8(tp, Cfg9346, RTL_R8(tp, Cfg9346) | Cfg9346_Unlock);
 }
 
-static void
+void
 rtl8126_disable_cfg9346_write(struct rtl8126_private *tp)
 {
         RTL_W8(tp, Cfg9346, RTL_R8(tp, Cfg9346) & ~Cfg9346_Unlock);
@@ -12330,8 +12353,8 @@ rtl8126_get_mac_address(struct net_device *dev)
         for (i = 0; i < MAC_ADDR_LEN; i++)
                 mac_addr[i] = RTL_R8(tp, MAC0 + i);
 
-        *(u32*)&mac_addr[0] = RTL_R32(tp, BACKUP_ADDR0_8126);
-        *(u16*)&mac_addr[4] = RTL_R16(tp, BACKUP_ADDR1_8126);
+        *(u32*)&mac_addr[0] = RTL_R32(tp, BACKUP_ADDR0_8125);
+        *(u16*)&mac_addr[4] = RTL_R16(tp, BACKUP_ADDR1_8125);
 
         if (!is_valid_ether_addr(mac_addr)) {
                 netif_err(tp, probe, dev, "Invalid ether addr %pM\n",

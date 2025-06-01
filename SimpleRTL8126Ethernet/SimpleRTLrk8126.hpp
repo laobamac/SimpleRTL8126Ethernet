@@ -725,6 +725,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 
 #define Reserved2_data  7
 #define RX_DMA_BURST_unlimited  7   /* Maximum PCI burst, '7' is unlimited */
+#define RX_DMA_BURST 7   /* Maximum PCI burst, '7' is unlimited */
 #define RX_DMA_BURST_512    5
 #define RX_DMA_BURST_256    4
 #define TX_DMA_BURST_unlimited  7
@@ -1576,8 +1577,8 @@ enum rtl8126_registers {
         ISR2_8126          = 0x806,
         IMR3_8126          = 0x808,
         ISR3_8126          = 0x80A,
-        BACKUP_ADDR0_8126  = 0x19E0,
-        BACKUP_ADDR1_8126  = 0X19E4,
+        BACKUP_ADDR0_8125  = 0x19E0,
+        BACKUP_ADDR1_8125  = 0X19E4,
         TCTR0_8126         = 0x0048,
         TCTR1_8126         = 0x004C,
         TCTR2_8126         = 0x0088,
@@ -2752,6 +2753,10 @@ struct rtl8126_private {
         u8 HwSuppCheckPhyDisableModeVer;
 
         u8 random_mac;
+    
+        u8 HwSuppGigaForceMode;
+    
+        u8 RequireLSOPatch;
 
         u16 phy_reg_aner;
         u16 phy_reg_anlpar;
@@ -3085,6 +3090,12 @@ void rtl8126_dash2_enable_tx(struct rtl8126_private *tp);
 void rtl8126_dash2_disable_rx(struct rtl8126_private *tp);
 void rtl8126_dash2_enable_rx(struct rtl8126_private *tp);
 void rtl8126_hw_disable_mac_mcu_bps(struct net_device *dev);
+
+void rtl8126_disable_ocp_phy_power_saving(struct net_device *dev);
+
+void rtl8126_disable_cfg9346_write(struct net_device *dev);
+
+void rtl8126_enable_cfg9346_write(struct net_device *dev);
 
 int rtl8126_enable_eee_plus(struct rtl8126_private *tp);
 int rtl8126_disable_eee_plus(struct rtl8126_private *tp);
