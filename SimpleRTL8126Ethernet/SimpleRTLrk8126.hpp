@@ -141,7 +141,7 @@ static inline u16 ethtool_adv_to_mmd_eee_adv_t(u32 adv)
 }
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,7,0) */
 
-#if DISABLED_CODE
+#if DISABLE_CODE
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,9,0)
 static inline bool skb_transport_header_was_set(const struct sk_buff *skb)
@@ -178,7 +178,7 @@ static inline void linkmode_mod_bit(int nr, volatile unsigned long *addr,
 }
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0) */
 
-#endif /* DISABLED_CODE */
+#endif /* DISABLE_CODE */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,3,0)
 static inline
@@ -670,7 +670,7 @@ static inline u32 rtl8126_ethtool_adv_to_mmd_eee_adv_cap2_t(u32 adv)
 #define RSS_SUFFIX ""
 #endif
 
-#define RTL8126_VERSION "10.015.00" NAPI_SUFFIX DASH_SUFFIX REALWOW_SUFFIX PTP_SUFFIX RSS_SUFFIX
+#define rtl8126_VERSION "10.015.00" NAPI_SUFFIX DASH_SUFFIX REALWOW_SUFFIX PTP_SUFFIX RSS_SUFFIX
 #define MODULENAME "r8126"
 #define PFX MODULENAME ": "
 
@@ -681,7 +681,7 @@ r8126  Copyright (C) 2024 Realtek NIC software team <nicfae@realtek.com> \n \
 This program comes with ABSOLUTELY NO WARRANTY; for details, please see <http://www.gnu.org/licenses/>. \n \
 This is free software, and you are welcome to redistribute it under certain conditions; see <http://www.gnu.org/licenses/>. \n"
 
-#ifdef RTL8126_DEBUG
+#ifdef rtl8126_DEBUG
 #define assert(expr) \
         if(!(expr)) {                   \
             printk("Assertion failed! %s,%s,%s,line=%d\n", \
@@ -691,7 +691,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 #else
 #define assert(expr) do {} while (0)
 #define dprintk(fmt, args...)   do {} while (0)
-#endif /* RTL8126_DEBUG */
+#endif /* rtl8126_DEBUG */
 
 #endif /* DISABLED_CODE */
 
@@ -771,9 +771,9 @@ This is free software, and you are welcome to redistribute it under certain cond
 #define R8126_MAX_MSIX_VEC   32
 #define R8126_MAX_RX_QUEUES_VEC_V3 (16)
 
-#define RTL8126_TX_TIMEOUT  (6 * HZ)
-#define RTL8126_LINK_TIMEOUT    (1 * HZ)
-#define RTL8126_ESD_TIMEOUT (2 * HZ)
+#define rtl8126_TX_TIMEOUT  (6 * HZ)
+#define rtl8126_LINK_TIMEOUT    (1 * HZ)
+#define rtl8126_ESD_TIMEOUT (2 * HZ)
 
 #define rtl8126_rx_page_size(order) (PAGE_SIZE << order)
 
@@ -798,6 +798,8 @@ This is free software, and you are welcome to redistribute it under certain cond
 #define RT_VALN_HLEN 4      /* 4(single vlan) bytes */
 #endif
 
+#if DISABLED_CODE
+
 #define R8126_MAX_TX_QUEUES (2)
 #define R8126_MAX_RX_QUEUES_V2 (4)
 #define R8126_MAX_RX_QUEUES_V3 (16)
@@ -805,8 +807,6 @@ This is free software, and you are welcome to redistribute it under certain cond
 #define R8126_MAX_QUEUES R8126_MAX_RX_QUEUES
 
 #define OCP_STD_PHY_BASE    0xa400
-
-#if DISABLED_CODE
 
 //Channel Wait Count
 #define R8126_CHANNEL_WAIT_COUNT (20000)
@@ -923,7 +923,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 #define D0_SPEED_UP_SPEED_2500       2
 #define D0_SPEED_UP_SPEED_5000       3
 
-#define RTL8126_MAC_MCU_PAGE_SIZE 256 //256 words
+#define rtl8126_MAC_MCU_PAGE_SIZE 256 //256 words
 
 #ifndef WRITE_ONCE
 #define WRITE_ONCE(var, val) (*((volatile typeof(val) *)(&(var))) = (val))
@@ -1495,7 +1495,7 @@ struct _kc_ethtool_pauseparam {
 
 /*****************************************************************************/
 
-enum RTL8126_registers {
+enum rtl8126_registers {
         MAC0            = 0x00,     /* Ethernet hardware address. */
         MAC4            = 0x04,
         MAR0            = 0x08,     /* Multicast filter. */
@@ -1664,7 +1664,7 @@ enum RTL8126_registers {
         TCAM_VLAN_TAG_V2                = 0x03,
 };
 
-enum RTL8126_register_content {
+enum rtl8126_register_content {
         /* InterruptStatusBits */
         SYSErr      = 0x8000,
         PCSTimeout  = 0x4000,
@@ -1925,7 +1925,7 @@ enum RTL8126_register_content {
         ISRIMR_V5_LINKCHG    = (1 << 18),
 
         /* Magic Number */
-        RTL8126_MAGIC_NUMBER = 0x0badbadbadbadbadull,
+        rtl8126_MAGIC_NUMBER = 0x0badbadbadbadbadull,
 };
 
 enum _DescStatusBit {
@@ -2080,8 +2080,8 @@ enum bits {
         BIT_31 = (1 << 31)
 };
 
-#define RTL8126_CP_NUM 4
-#define RTL8126_MAX_SUPPORT_CP_LEN 110
+#define rtl8126_CP_NUM 4
+#define rtl8126_MAX_SUPPORT_CP_LEN 110
 
 enum rtl8126_cp_status {
         rtl8126_cp_normal = 0,
@@ -2317,11 +2317,6 @@ struct r8126_irq {
         char        name[IFNAMSIZ + 10];
 };
 
-#endif /* DISABLED_CODE */
-
-#define RTL8126_RSS_KEY_SIZE     40  /* size of RSS Hash Key in bytes */
-#define RTL8126_MAX_INDIRECTION_TABLE_ENTRIES 128
-
 #pragma pack(1)
 struct rtl8126_regs {
         //00
@@ -2476,8 +2471,8 @@ struct rtl8126_regs_save {
         u32 rxq1_dsc_st_addr_2;
 
         u32 rss_ctrl;
-        u8 rss_key[RTL8126_RSS_KEY_SIZE];
-        u8 rss_i_table[RTL8126_MAX_INDIRECTION_TABLE_ENTRIES];
+        u8 rss_key[rtl8126_RSS_KEY_SIZE];
+        u8 rss_i_table[rtl8126_MAX_INDIRECTION_TABLE_ENTRIES];
         u16 rss_queue_num_sel_r;
 };
 
@@ -2526,6 +2521,8 @@ struct rtl8126_counters {
         u32 rdu;
 };
 
+#endif /* DISABLED_CODE */
+
 /* Flow Control Settings */
 enum rtl8126_fc_mode {
         rtl8126_fc_none = 0,
@@ -2536,10 +2533,10 @@ enum rtl8126_fc_mode {
 };
 
 enum rtl8126_state_t {
-        __RTL8126_TESTING = 0,
-        __RTL8126_RESETTING,
-        __RTL8126_DOWN,
-        __RTL8126_PTP_TX_IN_PROGRESS,
+        __rtl8126_TESTING = 0,
+        __rtl8126_RESETTING,
+        __rtl8126_DOWN,
+        __rtl8126_PTP_TX_IN_PROGRESS,
 };
 
 #define RTL_FLAG_RX_HWTSTAMP_ENABLED BIT_0
@@ -2726,8 +2723,6 @@ struct rtl8126_private {
         u16 hw_ram_code_ver;
 
         u8 rtk_enable_diag;
-    
-        u8 RequireLSOPatch;
 
         u8 ShortPacketSwChecksum;
 
@@ -2758,8 +2753,6 @@ struct rtl8126_private {
 
         u8 random_mac;
 
-        u8 HwSuppGigaForceMode;
-    
         u16 phy_reg_aner;
         u16 phy_reg_anlpar;
         u16 phy_reg_gbsr;
@@ -2885,7 +2878,6 @@ struct rtl8126_private {
 #endif //ENABLE_REALWOW_SUPPORT
     u32 eee_adv_t;
     u8 eee_enabled;
-
         struct ethtool_keee eee;
 
 #ifdef ENABLE_R8126_PROCFS
@@ -2927,8 +2919,8 @@ struct rtl8126_private {
 #ifdef ENABLE_RSS_SUPPORT
         u32 rss_flags;
         /* Receive Side Scaling settings */
-        u8 rss_key[RTL8126_RSS_KEY_SIZE];
-        u8 rss_indir_tbl[RTL8126_MAX_INDIRECTION_TABLE_ENTRIES];
+        u8 rss_key[rtl8126_RSS_KEY_SIZE];
+        u8 rss_indir_tbl[rtl8126_MAX_INDIRECTION_TABLE_ENTRIES];
         u32 rss_options;
 #endif
 
@@ -3094,8 +3086,6 @@ void rtl8126_dash2_disable_rx(struct rtl8126_private *tp);
 void rtl8126_dash2_enable_rx(struct rtl8126_private *tp);
 void rtl8126_hw_disable_mac_mcu_bps(struct net_device *dev);
 
-void rtl8126_disable_ocp_phy_power_saving(struct net_device *dev);
-
 int rtl8126_enable_eee_plus(struct rtl8126_private *tp);
 int rtl8126_disable_eee_plus(struct rtl8126_private *tp);
 int rtl8126_enable_eee(struct rtl8126_private *tp);
@@ -3150,6 +3140,7 @@ void rtl8126_disable_exit_l1_mask(struct rtl8126_private *tp);
 void rtl8126_wait_ll_share_fifo_ready(struct net_device *dev);
 
 void rtl8126_init_hw_phy_mcu(struct net_device *dev);
+void rtl8126_set_hw_phy_before_init_phy_mcu(struct net_device *dev);
 void rtl8126_enable_phy_aldps(struct rtl8126_private *tp);
 bool rtl8126_set_phy_mcu_patch_request(struct rtl8126_private *tp);
 bool rtl8126_clear_phy_mcu_patch_request(struct rtl8126_private *tp);
@@ -3165,15 +3156,15 @@ rtl8126_make_unusable_by_asic(struct rtl8126_private *tp,
 {
         switch (tp->InitRxDescType) {
         case RX_DESC_RING_TYPE_3:
-                ((struct RxDescV3 *)desc)->addr = RTL8126_MAGIC_NUMBER;
+                ((struct RxDescV3 *)desc)->addr = rtl8126_MAGIC_NUMBER;
                 ((struct RxDescV3 *)desc)->RxDescNormalDDWord4.opts1 &= ~cpu_to_le32(DescOwn | RsvdMaskV3);
                 break;
         case RX_DESC_RING_TYPE_4:
-                ((struct RxDescV4 *)desc)->addr = RTL8126_MAGIC_NUMBER;
+                ((struct RxDescV4 *)desc)->addr = rtl8126_MAGIC_NUMBER;
                 ((struct RxDescV4 *)desc)->RxDescNormalDDWord2.opts1 &= ~cpu_to_le32(DescOwn | RsvdMaskV4);
                 break;
         default:
-                desc->addr = RTL8126_MAGIC_NUMBER;
+                desc->addr = rtl8126_MAGIC_NUMBER;
                 desc->opts1 &= ~cpu_to_le32(DescOwn | RsvdMask);
                 break;
         }
@@ -3198,12 +3189,11 @@ rtl8126_enable_hw_interrupt_v2(struct rtl8126_private *tp, u32 message_id)
         RTL_W32(tp, IMR_V2_SET_REG_8126, BIT(message_id));
 }
 
+#endif /* DISABLED_CODE */
+
 int rtl8126_open(struct net_device *dev);
 int rtl8126_close(struct net_device *dev);
 void rtl8126_hw_config(struct net_device *dev);
-
-#endif /* DISABLED_CODE */
-
 void rtl8126_hw_set_timer_int_8126(struct rtl8126_private *tp, u32 message_id, u8 timer_intmiti_val);
 void rtl8126_set_rx_q_num(struct rtl8126_private *tp, unsigned int num_rx_queues);
 void rtl8126_set_tx_q_num(struct rtl8126_private *tp, unsigned int num_tx_queues);

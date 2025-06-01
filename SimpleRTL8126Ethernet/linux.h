@@ -18,8 +18,8 @@
  * This driver is based on Realtek's r8126 Linux driver (9.03.04).
  */
 
-#ifndef SimpleRTL8126_linux_h
-#define SimpleRTL8126_linux_h
+#ifndef Simplertl8126_linux_h
+#define Simplertl8126_linux_h
 
 #include <IOKit/IOLib.h>
 
@@ -29,7 +29,7 @@
 #pragma mark -
 /******************************************************************************/
 
-#if defined(RTL8126_DEBUG)
+#if defined(rtl8126_DEBUG)
 
 // Levels 1 to 6 are used, in order of verbosity.
 // 5 or above will usually produce a LOT of log output for every packet.
