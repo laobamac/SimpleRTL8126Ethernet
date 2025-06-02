@@ -20,7 +20,7 @@
 
 #include <IOKit/IODMACommand.h>
 
-#include "SimpleRTLrk8126.hpp"
+#include "SimpleRTLV.hpp"
 
 #ifdef DEBUG
 #define DebugLog(args...) IOLog(args)
@@ -442,6 +442,7 @@ private:
     struct IOEthernetAddress fallBackMacAddr;
 
     UInt32 pollInterval2500;
+    UInt32 pollInterval5000;
     UInt32 intrMask;
     UInt32 intrMaskRxTx;
     UInt32 intrMaskTimer;

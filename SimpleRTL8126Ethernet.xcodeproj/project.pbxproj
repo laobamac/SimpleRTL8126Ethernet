@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D346B75A2443D45400905CD6 /* SimpleRTL8126HW.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D346B7592443D45400905CD6 /* SimpleRTL8126HW.cpp */; };
+		D346B75A2443D45400905CD6 /* SimpleRTL8126Hardware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D346B7592443D45400905CD6 /* SimpleRTL8126Hardware.cpp */; };
 		D38D865F2443ACB600D94935 /* SimpleRTL8126Ethernet.hpp in Headers */ = {isa = PBXBuildFile; fileRef = D38D865E2443ACB600D94935 /* SimpleRTL8126Ethernet.hpp */; };
 		D38D86612443ACB600D94935 /* SimpleRTL8126Ethernet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D38D86602443ACB600D94935 /* SimpleRTL8126Ethernet.cpp */; };
 		D38F5FA12BABCA34005D5D2A /* SimpleRTL8126Setup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D38F5FA02BABCA34005D5D2A /* SimpleRTL8126Setup.cpp */; };
 		D38F64F52BABD037005D5D2A /* libkmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D38F64F02BABD022005D5D2A /* libkmod.a */; };
-		D3E7391B2620E7CF0083B9FC /* SimpleRTLrk8126.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D3EF667D261531670078DB54 /* SimpleRTLrk8126.cpp */; };
-		D3EF6680261531670078DB54 /* SimpleRTLrk8126.hpp in Headers */ = {isa = PBXBuildFile; fileRef = D3EF667E261531670078DB54 /* SimpleRTLrk8126.hpp */; };
+		D3E7391B2620E7CF0083B9FC /* SimpleRTLV.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D3EF667D261531670078DB54 /* SimpleRTLV.cpp */; };
+		D3EF6680261531670078DB54 /* SimpleRTLV.hpp in Headers */ = {isa = PBXBuildFile; fileRef = D3EF667E261531670078DB54 /* SimpleRTLV.hpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,7 +42,7 @@
 
 /* Begin PBXFileReference section */
 		D346B7582443CE0A00905CD6 /* r8126_dash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = r8126_dash.h; sourceTree = "<group>"; };
-		D346B7592443D45400905CD6 /* SimpleRTL8126HW.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SimpleRTL8126HW.cpp; sourceTree = "<group>"; };
+		D346B7592443D45400905CD6 /* SimpleRTL8126Hardware.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SimpleRTL8126Hardware.cpp; sourceTree = "<group>"; };
 		D38D865B2443ACB600D94935 /* SimpleRTL8126Ethernet.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimpleRTL8126Ethernet.kext; sourceTree = BUILT_PRODUCTS_DIR; };
 		D38D865E2443ACB600D94935 /* SimpleRTL8126Ethernet.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SimpleRTL8126Ethernet.hpp; sourceTree = "<group>"; };
 		D38D86602443ACB600D94935 /* SimpleRTL8126Ethernet.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SimpleRTL8126Ethernet.cpp; sourceTree = "<group>"; };
@@ -1285,8 +1285,8 @@
 		D38F64E82BABD022005D5D2A /* video_console.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = video_console.h; sourceTree = "<group>"; };
 		D38F64E92BABD022005D5D2A /* string.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = string.h; sourceTree = "<group>"; };
 		D38F64EA2BABD022005D5D2A /* LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
-		D3EF667D261531670078DB54 /* SimpleRTLrk8126.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SimpleRTLrk8126.cpp; sourceTree = "<group>"; };
-		D3EF667E261531670078DB54 /* SimpleRTLrk8126.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SimpleRTLrk8126.hpp; sourceTree = "<group>"; };
+		D3EF667D261531670078DB54 /* SimpleRTLV.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SimpleRTLV.cpp; sourceTree = "<group>"; };
+		D3EF667E261531670078DB54 /* SimpleRTLV.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SimpleRTLV.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1323,10 +1323,10 @@
 			children = (
 				D38D865E2443ACB600D94935 /* SimpleRTL8126Ethernet.hpp */,
 				D38D86602443ACB600D94935 /* SimpleRTL8126Ethernet.cpp */,
-				D346B7592443D45400905CD6 /* SimpleRTL8126HW.cpp */,
+				D346B7592443D45400905CD6 /* SimpleRTL8126Hardware.cpp */,
 				D38F5FA02BABCA34005D5D2A /* SimpleRTL8126Setup.cpp */,
-				D3EF667E261531670078DB54 /* SimpleRTLrk8126.hpp */,
-				D3EF667D261531670078DB54 /* SimpleRTLrk8126.cpp */,
+				D3EF667E261531670078DB54 /* SimpleRTLV.hpp */,
+				D3EF667D261531670078DB54 /* SimpleRTLV.cpp */,
 				D346B7582443CE0A00905CD6 /* r8126_dash.h */,
 				D38D86702443B66200D94935 /* ethertool.h */,
 				D38D86752443B66300D94935 /* if_ether.h */,
@@ -3530,7 +3530,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D3EF6680261531670078DB54 /* SimpleRTLrk8126.hpp in Headers */,
+				D3EF6680261531670078DB54 /* SimpleRTLV.hpp in Headers */,
 				D38D865F2443ACB600D94935 /* SimpleRTL8126Ethernet.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3636,8 +3636,8 @@
 			files = (
 				D38D86612443ACB600D94935 /* SimpleRTL8126Ethernet.cpp in Sources */,
 				D38F5FA12BABCA34005D5D2A /* SimpleRTL8126Setup.cpp in Sources */,
-				D346B75A2443D45400905CD6 /* SimpleRTL8126HW.cpp in Sources */,
-				D3E7391B2620E7CF0083B9FC /* SimpleRTLrk8126.cpp in Sources */,
+				D346B75A2443D45400905CD6 /* SimpleRTL8126Hardware.cpp in Sources */,
+				D3E7391B2620E7CF0083B9FC /* SimpleRTLV.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

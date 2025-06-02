@@ -1,16 +1,5 @@
-/*
- The MIT License (MIT)
- Copyright © 2025 王孝慈
-
- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
-#ifndef SimpleRTLrk8126_hpp
-#define SimpleRTLrk8126_hpp
+#ifndef SimpleRTLV_hpp
+#define SimpleRTLV_hpp
 
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
@@ -208,7 +197,7 @@ ssize_t strscpy(char *dest, const char *src, size_t count)
 }
 #endif
 
-#if DISABLED_CODE
+#if DISABLE_CODE
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(4,6,0))
 static inline unsigned char *skb_checksum_start(const struct sk_buff *skb)
@@ -221,7 +210,7 @@ static inline unsigned char *skb_checksum_start(const struct sk_buff *skb)
 }
 #endif
 
-#endif /* DISABLED_CODE */
+#endif /* DISABLE_CODE */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0)
 static inline void netdev_tx_sent_queue(struct netdev_queue *dev_queue,
@@ -234,8 +223,8 @@ static inline void netdev_tx_completed_queue(struct netdev_queue *dev_queue,
 static inline void netdev_tx_reset_queue(struct netdev_queue *q) {}
 #endif
 
-#if DISABLED_CODE
-
+/*
+ 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5,8,0)
 static inline void fsleep(unsigned long usecs)
 {
@@ -246,9 +235,9 @@ static inline void fsleep(unsigned long usecs)
         else
                 msleep(DIV_ROUND_UP(usecs, 1000));
 }
-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(5,8,0) */
+#endif
 
-#endif /* DISABLED_CODE */
+*/
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5,2,0)
 #define netdev_xmit_more() (0)
@@ -267,8 +256,7 @@ static inline void fsleep(unsigned long usecs)
 typedef int netdev_tx_t;
 #endif
 
-#if DISABLED_CODE
-
+#if DISABLE_CODE
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5,12,0)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,1,9)
 static inline bool page_is_pfmemalloc(struct page *page)
@@ -286,9 +274,7 @@ static inline bool dev_page_is_reusable(struct page *page)
                       !page_is_pfmemalloc(page));
 }
 #endif
-
-#endif /* DISABLED_CODE */
-
+#endif
 /*
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,12,0)&& !defined(ENABLE_LIB_SUPPORT)
 #define RTL_USE_NEW_INTR_API
@@ -724,8 +710,8 @@ This is free software, and you are welcome to redistribute it under certain cond
 #endif
 
 #define Reserved2_data  7
+#define RX_DMA_BURST    7   /* Maximum PCI burst, '6' is 1024 */
 #define RX_DMA_BURST_unlimited  7   /* Maximum PCI burst, '7' is unlimited */
-#define RX_DMA_BURST 7   /* Maximum PCI burst, '7' is unlimited */
 #define RX_DMA_BURST_512    5
 #define RX_DMA_BURST_256    4
 #define TX_DMA_BURST_unlimited  7
@@ -1577,8 +1563,8 @@ enum rtl8126_registers {
         ISR2_8126          = 0x806,
         IMR3_8126          = 0x808,
         ISR3_8126          = 0x80A,
-        BACKUP_ADDR0_8125  = 0x19E0,
-        BACKUP_ADDR1_8125  = 0X19E4,
+        BACKUP_ADDR0_8126  = 0x19E0,
+        BACKUP_ADDR1_8126  = 0X19E4,
         TCTR0_8126         = 0x0048,
         TCTR1_8126         = 0x004C,
         TCTR2_8126         = 0x0088,
@@ -2881,6 +2867,7 @@ struct rtl8126_private {
         MP_KCP_INFO MpKCPInfo;
         //Realwow--------------
 #endif //ENABLE_REALWOW_SUPPORT
+    
     u32 eee_adv_t;
     u8 eee_enabled;
         struct ethtool_keee eee;
@@ -3093,10 +3080,6 @@ void rtl8126_hw_disable_mac_mcu_bps(struct net_device *dev);
 
 void rtl8126_disable_ocp_phy_power_saving(struct net_device *dev);
 
-void rtl8126_disable_cfg9346_write(struct net_device *dev);
-
-void rtl8126_enable_cfg9346_write(struct net_device *dev);
-
 int rtl8126_enable_eee_plus(struct rtl8126_private *tp);
 int rtl8126_disable_eee_plus(struct rtl8126_private *tp);
 int rtl8126_enable_eee(struct rtl8126_private *tp);
@@ -3259,7 +3242,7 @@ struct RTLChipInfo {
     u32 jumbo_frame_sz;
 };
 
-void rtl8126_rar_set(struct rtl8126_private *tp, uint8_t *addr);
+void rtl8126_rar_set(struct rtl8126_private *tp, const uint8_t *addr);
 
 #endif /* __R8126_H */
 
@@ -3283,4 +3266,4 @@ void rtl8126_lower_clock(struct rtl8126_private *tp, u8 *x);
 void rtl8126_stand_by(struct rtl8126_private *tp);
 void rtl8126_set_eeprom_sel_low(struct rtl8126_private *tp);
 
-#endif /* SimpleRTLrk8126_hpp */
+#endif

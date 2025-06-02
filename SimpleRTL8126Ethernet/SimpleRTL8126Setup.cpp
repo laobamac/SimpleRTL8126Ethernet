@@ -78,15 +78,23 @@ void SimpleRTL8126::getParams()
         if (pollInt) {
             usInterval = pollInt->unsigned32BitValue();
             
-            if (usInterval > 150)
+            if (usInterval > 150) {
                 pollInterval2500 = 150000;
-            else if (usInterval < 75)
+                pollInterval5000 = 150000;
+            }
+            else if (usInterval < 75) {
                 pollInterval2500 = 75000;
-            else
+                pollInterval5000 = 75000;
+            }
+            else {
                 pollInterval2500 = usInterval * 1000;
+                pollInterval5000 = usInterval * 1000;
+            }
         } else {
             pollInterval2500 = 110000;
+            pollInterval5000 = 110000;
         }
+        
         fbAddr = OSDynamicCast(OSString, params->getObject(kFallbackName));
         
         if (fbAddr) {
@@ -106,11 +114,12 @@ void SimpleRTL8126::getParams()
         enableTSO4 = true;
         enableTSO6 = true;
         pollInterval2500 = 0;
+        pollInterval5000 = 0;
     }
     if (versionString)
-        IOLog("SimpleRTL8126Ethernet version %s starting. Good luck to you!\n", versionString->getCStringNoCopy());
+        IOLog("SimpleRTL8126Ethernet version %s starting. Please don't support tonymacx86.com!\n", versionString->getCStringNoCopy());
     else
-        IOLog("SimpleRTL8126Ethernet starting. laobamac gave you bless.\n");
+        IOLog("SimpleRTL8126Ethernet starting. Please don't support tonymacx86.com!\n");
 }
 
 static IOMediumType mediumTypeArray[MEDIUM_INDEX_COUNT] = {

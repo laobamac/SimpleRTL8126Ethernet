@@ -151,29 +151,28 @@ IOReturn SimpleRTL8126::identifyChip()
     version = val32 & 0x00700000;
 
     switch (reg) {
-    case 0x64800000:
-            if (version == 0x00000000) {
-                    tp->mcfg = CFG_METHOD_1;
-            } else if (version == 0x100000) {
-                    tp->mcfg = CFG_METHOD_2;
-            } else if (version == 0x200000) {
-                    tp->mcfg = CFG_METHOD_3;
-            } else {
-                    tp->mcfg = CFG_METHOD_3;
-                    tp->HwIcVerUnknown = TRUE;
-            }
+            case 0x64800000:
+                    if (version == 0x00000000) {
+                            tp->mcfg = CFG_METHOD_1;
+                    } else if (version == 0x100000) {
+                            tp->mcfg = CFG_METHOD_2;
+                    } else if (version == 0x200000) {
+                            tp->mcfg = CFG_METHOD_3;
+                    } else {
+                            tp->mcfg = CFG_METHOD_3;
+                            tp->HwIcVerUnknown = TRUE;
+                    }
 
-            tp->efuse_ver = EFUSE_SUPPORT_V4;
-            break;
-            
-    default:
-            IOLog("unknown chip version (%x)\n",reg);
-            tp->mcfg = CFG_METHOD_DEFAULT;
-            tp->HwIcVerUnknown = TRUE;
-            tp->efuse_ver = EFUSE_NOT_SUPPORT;
-            result = kIOReturnError;
-            break;
-    }
+                    tp->efuse_ver = EFUSE_SUPPORT_V4;
+                    break;
+            default:
+                    IOLog("unknown chip version (%x)\n",reg);
+                    tp->mcfg = CFG_METHOD_DEFAULT;
+                    tp->HwIcVerUnknown = TRUE;
+                    tp->efuse_ver = EFUSE_NOT_SUPPORT;
+                    result = kIOReturnError;
+                    break;
+            }
     return result;
 }
 
@@ -232,7 +231,7 @@ bool SimpleRTL8126::initRTL8126()
         case CFG_METHOD_1:
         case CFG_METHOD_2:
         case CFG_METHOD_3:
-            tp->HwPcieSNOffset = 0x174;
+            tp->HwPcieSNOffset = 0x16C;
             break;
     }
 
@@ -245,32 +244,26 @@ bool SimpleRTL8126::initRTL8126()
             case CFG_METHOD_1:
             case CFG_METHOD_2:
             case CFG_METHOD_3:
-                tp->org_pci_offset_99 = csiFun0ReadByte(0x99);
-                tp->org_pci_offset_99 &= ~(BIT_5|BIT_6);
-                
-                tp->org_pci_offset_180 = csiFun0ReadByte(0x22c);
-                break;
+                    tp->org_pci_offset_99 = csiFun0ReadByte(0x99);
+                    tp->org_pci_offset_99 &= ~(BIT_5|BIT_6);
+                    break;
+        }
+        switch (tp->mcfg) {
+            case CFG_METHOD_1:
+            case CFG_METHOD_2:
+            case CFG_METHOD_3:
+                    tp->org_pci_offset_180 = csiFun0ReadByte(0x22c);
+                    break;
         }
     }
     tp->org_pci_offset_80 = pciDevice->configRead8(0x80);
     tp->org_pci_offset_81 = pciDevice->configRead8(0x81);
     tp->use_timer_interrupt = true;
-
-    tp->HwSuppMaxPhyLinkSpeed = 5000;
-        
-    /*
-    if (timer_count == 0 || tp->mcfg == CFG_METHOD_DEFAULT)
-            tp->use_timer_interrupt = FALSE;
-    */
-        
-    tp->ShortPacketSwChecksum = TRUE;
-    tp->UseSwPaddingShortPkt = TRUE;
 /*
     switch (tp->mcfg) {
+        case CFG_METHOD_1:
         case CFG_METHOD_2:
         case CFG_METHOD_3:
-        case CFG_METHOD_4:
-        case CFG_METHOD_5:
         default:
             tp->use_timer_interrrupt = true;
             break;
@@ -315,23 +308,19 @@ bool SimpleRTL8126::initRTL8126()
             tp->HwSuppGigaForceMode = true;
             break;
     }
-        
     switch (tp->mcfg) {
-            case CFG_METHOD_1:
-                    tp->HwSuppTxNoCloseVer = 4;
-                    break;
-            case CFG_METHOD_2:
-            case CFG_METHOD_3:
-                    tp->HwSuppTxNoCloseVer = 5;
-                    break;
-            }
-        
+        case CFG_METHOD_1:
+        case CFG_METHOD_2:
+        case CFG_METHOD_3:
+            tp->HwSuppTxNoCloseVer = 3;
+            break;
+    }
     if (tp->HwSuppTxNoCloseVer > 0)
         tp->EnableTxNoClose = true;
 
     switch (tp->mcfg) {
-        case CFG_METHOD_1:
         case CFG_METHOD_2:
+        case CFG_METHOD_3:
             tp->RequireLSOPatch = true;
             break;
     }
@@ -353,7 +342,6 @@ bool SimpleRTL8126::initRTL8126()
             tp->NotWrMcuPatchCode = true;
     }
 
-    /*
     switch (tp->mcfg) {
     case CFG_METHOD_3:
         if ((rtl8126_mac_ocp_read(tp, 0xD442) & BIT_5) &&
@@ -363,8 +351,6 @@ bool SimpleRTL8126::initRTL8126()
         }
         break;
     }
-    */
-        
     switch (tp->mcfg) {
         case CFG_METHOD_1:
         case CFG_METHOD_2:
@@ -395,18 +381,18 @@ bool SimpleRTL8126::initRTL8126()
 
     //init interrupt
     switch (tp->mcfg) {
-            case CFG_METHOD_1:
-                    tp->HwSuppIsrVer = 2;
-                    break;
-            case CFG_METHOD_2:
-            case CFG_METHOD_3:
-                    tp->HwSuppIsrVer = 3;
-                    break;
-            default:
-                    tp->HwSuppIsrVer = 1;
-                    break;
-            }
-        
+    case CFG_METHOD_1:
+            tp->HwSuppIsrVer = 2;
+            break;
+    case CFG_METHOD_2:
+    case CFG_METHOD_3:
+            tp->HwSuppIsrVer = 3;
+            break;
+    default:
+            tp->HwSuppIsrVer = 1;
+            break;
+    }
+    
     switch (tp->mcfg) {
             case CFG_METHOD_1:
                     tp->HwSuppIntMitiVer = 4;
@@ -444,8 +430,8 @@ bool SimpleRTL8126::initRTL8126()
     if(tp->mcfg == CFG_METHOD_1 ||
         tp->mcfg == CFG_METHOD_2 ||
         tp->mcfg == CFG_METHOD_3) {
-            *(UInt32*)&macAddr[0] = ReadReg32(BACKUP_ADDR0_8125);
-            *(UInt16*)&macAddr[4] = ReadReg16(BACKUP_ADDR1_8125);
+            *(UInt32*)&macAddr[0] = ReadReg32(BACKUP_ADDR0_8126);
+            *(UInt16*)&macAddr[4] = ReadReg16(BACKUP_ADDR1_8126);
     }
 
     if (is_valid_ether_addr((UInt8 *) macAddr)) {
@@ -572,16 +558,12 @@ void SimpleRTL8126::setupRTL8126()
     
     switch (tp->mcfg) {
         case CFG_METHOD_1:
+        case CFG_METHOD_2:
+        case CFG_METHOD_3:
             WriteReg8(0xF1, ReadReg8(0xF1) & ~BIT_7);
             WriteReg8(Config2, ReadReg8(Config2) & ~BIT_7);
             WriteReg8(Config5, ReadReg8(Config5) & ~BIT_0);
             break;
-            
-        case CFG_METHOD_2:
-        case CFG_METHOD_3:
-            WriteReg8(0xF1, ReadReg8(0xF1) & ~BIT_7);
-            WriteReg8(INT_CFG0_8126, ReadReg8(INT_CFG0_8126) & ~BIT_3);
-            WriteReg8(Config5, ReadReg8(Config5) & ~BIT_0);
     }
 
     //clear io_rdy_l23
@@ -593,15 +575,31 @@ void SimpleRTL8126::setupRTL8126()
             break;
     }
 
-    switch (tp->mcfg) {
-        case CFG_METHOD_1:
-        case CFG_METHOD_2:
-        case CFG_METHOD_3:
-            //IntMITI_0-IntMITI_31
-            for (i=0xA00; i<0xB00; i+=4)
-                    WriteReg32(i, 0x00000000);
-            break;
-    }
+    switch (tp->HwSuppIntMitiVer) {
+            case 3:
+            case 6:
+                    //IntMITI_0-IntMITI_31
+                    for (i=0xA00; i<0xB00; i+=4)
+                            RTL_W32(tp, i, 0x0000);
+                    break;
+            case 4:
+            case 5:
+                    //IntMITI_0-IntMITI_15
+                    for (i = 0xA00; i < 0xA80; i += 4)
+                            RTL_W32(tp, i, 0x0000);
+
+                    if (tp->HwSuppIntMitiVer == 5)
+                            WriteReg8(INT_CFG0_8126, ReadReg8(INT_CFG0_8126) &
+                                   ~(INT_CFG0_TIMEOUT0_BYPASS_8126 |
+                                     INT_CFG0_MITIGATION_BYPASS_8126 |
+                                     INT_CFG0_RDU_BYPASS_8126));
+                    else
+                            WriteReg8(INT_CFG0_8126, ReadReg8(INT_CFG0_8126) &
+                                   ~(INT_CFG0_TIMEOUT0_BYPASS_8126 | INT_CFG0_MITIGATION_BYPASS_8126));
+
+                    RTL_W16(tp, INT_CFG1_8126, 0x0000);
+                    break;
+            }
 
     //keep magic packet only
     switch (tp->mcfg) {
@@ -637,9 +635,9 @@ void SimpleRTL8126::setupRTL8126()
     
     if (tp->mcfg == CFG_METHOD_1 ||
         tp->mcfg == CFG_METHOD_2 ||
-        tp->mcfg == CFG_METHOD_3) {
+        tp->mcfg == CFG_METHOD_3 ) {
         set_offset70F(tp, 0x27);
-        setOffset79(0x50);
+        setOffset79(0x40);
 
         WriteReg16(0x382, 0x221B);
 
@@ -657,99 +655,86 @@ void SimpleRTL8126::setupRTL8126()
          * tx timeouts when using TSO.
          */
         mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xEB58);
-        //mac_ocp_data |= (BIT_0);
-        mac_ocp_data &= ~(BIT_0);
+        if (tp->mcfg == CFG_METHOD_2 || tp->mcfg == CFG_METHOD_3)
+                mac_ocp_data &= ~(BIT_0 | BIT_1);
+        mac_ocp_data |= (BIT_0);
         rtl8126_mac_ocp_write(tp, 0xEB58, mac_ocp_data);
 
-        mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xE614);
-        mac_ocp_data &= ~( BIT_10 | BIT_9 | BIT_8);
-        if (tp->mcfg == CFG_METHOD_1 || tp->mcfg == CFG_METHOD_2 || tp->mcfg == CFG_METHOD_3) {
-            mac_ocp_data |= ((4 & 0x07) << 8);
-        } else {
-            if (tp->DASH && !(csiFun0ReadByte(0x79) & BIT_0))
-                mac_ocp_data |= ((3 & 0x07) << 8);
-            else
-                mac_ocp_data |= ((4 & 0x07) << 8);
+        if (tp->HwSuppRxDescType == RX_DESC_RING_TYPE_4) {
+                if (tp->InitRxDescType == RX_DESC_RING_TYPE_4)
+                        WriteReg8(0xd8, ReadReg8(0xd8) |
+                                EnableRxDescV4_0);
+                else
+                        WriteReg8(0xd8, ReadReg8(0xd8) &
+                                ~EnableRxDescV4_0);
         }
+
+        mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xE614);
+        mac_ocp_data &= ~(BIT_10 | BIT_9 | BIT_8);
+        mac_ocp_data |= ((4 & 0x07) << 8);
         rtl8126_mac_ocp_write(tp, 0xE614, mac_ocp_data);
+
         
         //rtl8126_set_tx_q_num(tp, tp->HwSuppNumTxQueues);
         
         /* Set tx queue num to one. */
         mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xE63E);
-        mac_ocp_data &= ~(BIT_11 | BIT_10);
-        mac_ocp_data |= ((0 & 0x03) << 10);
+        mac_ocp_data &= ~(BIT_5 | BIT_4);
+        mac_ocp_data |= ((0x02 & 0x03) << 4);
         rtl8126_mac_ocp_write(tp, 0xE63E, mac_ocp_data);
 
-        mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xE63E);
-        mac_ocp_data &= ~(BIT_5 | BIT_4);
-        
-        if (tp->mcfg == CFG_METHOD_2 || tp->mcfg == CFG_METHOD_3)
-            mac_ocp_data |= ((0x02 & 0x03) << 4);
-        
-        rtl8126_mac_ocp_write(tp, 0xE63E, mac_ocp_data);
-        
         mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xC0B4);
-        mac_ocp_data &= ~BIT_0;
+        mac_ocp_data |= (BIT_3 | BIT_2);
         rtl8126_mac_ocp_write(tp, 0xC0B4, mac_ocp_data);
-        mac_ocp_data |= BIT_0;
-        rtl8126_mac_ocp_write(tp, 0xC0B4, mac_ocp_data);
-        
-        mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xC0B4);
-        mac_ocp_data |= (BIT_3|BIT_2);
-        rtl8126_mac_ocp_write(tp, 0xC0B4, mac_ocp_data);
-        
+
         mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xEB6A);
         mac_ocp_data &= ~(BIT_7 | BIT_6 | BIT_5 | BIT_4 | BIT_3 | BIT_2 | BIT_1 | BIT_0);
         mac_ocp_data |= (BIT_5 | BIT_4 | BIT_1 | BIT_0);
         rtl8126_mac_ocp_write(tp, 0xEB6A, mac_ocp_data);
-        
+
         mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xEB50);
         mac_ocp_data &= ~(BIT_9 | BIT_8 | BIT_7 | BIT_6 | BIT_5);
         mac_ocp_data |= (BIT_6);
         rtl8126_mac_ocp_write(tp, 0xEB50, mac_ocp_data);
-        
+
         mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xE056);
         mac_ocp_data &= ~(BIT_7 | BIT_6 | BIT_5 | BIT_4);
-        mac_ocp_data |= (BIT_4 | BIT_5);
+        //mac_ocp_data |= (BIT_4 | BIT_5);
         rtl8126_mac_ocp_write(tp, 0xE056, mac_ocp_data);
-        
+
         WriteReg8(TDFNR, 0x10);
-        
-        WriteReg8(0xD0, RTL_R8(tp, 0xD0) | BIT_7);
-        
+
         mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xE040);
         mac_ocp_data &= ~(BIT_12);
         rtl8126_mac_ocp_write(tp, 0xE040, mac_ocp_data);
-        
+
         mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xEA1C);
         mac_ocp_data &= ~(BIT_1 | BIT_0);
         mac_ocp_data |= (BIT_0);
         rtl8126_mac_ocp_write(tp, 0xEA1C, mac_ocp_data);
+
+        rtl8126_mac_ocp_write(tp, 0xE0C0, 0x4000);
         
-        mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xE0C0);
-        mac_ocp_data &= ~(BIT_14 | BIT_11 | BIT_10 | BIT_9 | BIT_8 | BIT_3 | BIT_2 | BIT_1 | BIT_0);
-        mac_ocp_data |= (BIT_14 | BIT_10 | BIT_1 | BIT_0);
-        rtl8126_mac_ocp_write(tp, 0xE0C0, mac_ocp_data);
-        
-        SetMcuAccessRegBit(tp, 0xE052, (BIT_6|BIT_5|BIT_3));
-        ClearMcuAccessRegBit(tp, 0xE052, BIT_7);
-        
+        rtl8126_set_mac_ocp_bit(tp, 0xE052, (BIT_6 | BIT_5));
+        rtl8126_clear_mac_ocp_bit(tp, 0xE052, BIT_3 | BIT_7);
+
         mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xD430);
         mac_ocp_data &= ~(BIT_11 | BIT_10 | BIT_9 | BIT_8 | BIT_7 | BIT_6 | BIT_5 | BIT_4 | BIT_3 | BIT_2 | BIT_1 | BIT_0);
-        mac_ocp_data |= 0x47F;
+        mac_ocp_data |= 0x45F;
         rtl8126_mac_ocp_write(tp, 0xD430, mac_ocp_data);
-        
+
         //rtl8126_mac_ocp_write(tp, 0xE0C0, 0x4F87);
-        WriteReg8(0xD0, RTL_R8(tp, 0xD0) | BIT_6 | BIT_7);
-        
-        if (tp->mcfg == CFG_METHOD_2 || tp->mcfg == CFG_METHOD_3)
-            WriteReg8(0xD3, RTL_R8(tp, 0xD3) | BIT_0);
+        if (!tp->DASH)
+                WriteReg8(0xD0, ReadReg8(0xD0) | BIT_6 | BIT_7);
+        else
+                WriteReg8(0xD0, ReadReg8(0xD0) & ~(BIT_6 | BIT_7));
         
         rtl8126_disable_eee_plus(tp);
-        
+
         mac_ocp_data = rtl8126_mac_ocp_read(tp, 0xEA1C);
         mac_ocp_data &= ~(BIT_2);
+        if (tp->mcfg == CFG_METHOD_2 || tp->mcfg == CFG_METHOD_3)
+                mac_ocp_data &= ~(BIT_9 | BIT_8);
         rtl8126_mac_ocp_write(tp, 0xEA1C, mac_ocp_data);
         
         SetMcuAccessRegBit(tp, 0xEB54, BIT_0);
@@ -800,10 +785,10 @@ void SimpleRTL8126::setupRTL8126()
     switch (tp->mcfg) {
         case CFG_METHOD_1:
         case CFG_METHOD_2:
-        case CFG_METHOD_3:{
+        case CFG_METHOD_3: {
             int timeout;
             for (timeout = 0; timeout < 10; timeout++) {
-                if ((rtl8126_mac_ocp_read(tp, 0xDC04) & BIT_13)==0)
+                if ((rtl8126_ocp_read(tp, 0x124, 1) & BIT_0)==0)
                     break;
                 mdelay(1);
             }
@@ -855,7 +840,7 @@ void SimpleRTL8126::setPhyMedium()
     int giga_ctrl = 0;
     int ctrl_2500 = 0;
     
-    if (speed != SPEED_2500 && (speed != SPEED_1000) &&
+    if (speed != SPEED_5000 && speed != SPEED_2500 && (speed != SPEED_1000) &&
         (speed != SPEED_100) && (speed != SPEED_10)) {
         duplex = DUPLEX_FULL;
         autoneg = AUTONEG_ENABLE;
@@ -870,13 +855,13 @@ void SimpleRTL8126::setPhyMedium()
     }
     //Disable Giga Lite
     ClearEthPhyOcpBit(tp, 0xA428, BIT_9);
-    ClearEthPhyOcpBit(tp, 0xA5EA, BIT_0);
+    ClearEthPhyOcpBit(tp, 0xA5EA, BIT_0 | BIT_1 | BIT_2);
 
     giga_ctrl = rtl8126_mdio_read(tp, MII_CTRL1000);
     giga_ctrl &= ~(ADVERTISE_1000HALF | ADVERTISE_1000FULL);
     
     ctrl_2500 = mdio_direct_read_phy_ocp(tp, 0xA5D4);
-    ctrl_2500 &= ~(RTK_ADVERTISE_2500FULL);
+    ctrl_2500 &= ~(RTK_ADVERTISE_2500FULL | RTK_ADVERTISE_5000FULL);
     
     auto_nego = rtl8126_mdio_read(tp, MII_ADVERTISE);
     auto_nego &= ~(ADVERTISE_10HALF | ADVERTISE_10FULL |
@@ -886,8 +871,10 @@ void SimpleRTL8126::setPhyMedium()
     if (autoneg == AUTONEG_ENABLE) {
         /* The default medium has been selected. */
         auto_nego |= (ADVERTISE_10HALF | ADVERTISE_10FULL | ADVERTISE_100HALF | ADVERTISE_100FULL);
-        giga_ctrl |= ADVERTISE_1000FULL;
-        ctrl_2500 |= RTK_ADVERTISE_2500FULL;
+        giga_ctrl |= (ADVERTISE_1000FULL | ADVERTISE_1000HALF);
+        ctrl_2500 |= (RTK_ADVERTISE_2500FULL | RTK_ADVERTISE_5000FULL);
+    } else if (speed == SPEED_5000) {
+        ctrl_2500 |= RTK_ADVERTISE_5000FULL;
     } else if (speed == SPEED_2500) {
         ctrl_2500 |= RTK_ADVERTISE_2500FULL;
     } else if (speed == SPEED_1000) {
@@ -1048,46 +1035,33 @@ void SimpleRTL8126::initPCIOffset99()
     u32 csi_tmp;
 
     switch (tp->mcfg) {
-            case CFG_METHOD_1:
-                    rtl8126_mac_ocp_write(tp, 0xCDD0, 0x9003);
-                    rtl8126_set_mac_ocp_bit(tp, 0xE034, (BIT_15 | BIT_14));
-                    rtl8126_mac_ocp_write(tp, 0xCDD2, 0x889C);
-                    rtl8126_mac_ocp_write(tp, 0xCDD8, 0x9003);
-                    rtl8126_mac_ocp_write(tp, 0xCDD4, 0x8C30);
-                    rtl8126_mac_ocp_write(tp, 0xCDDA, 0x9003);
-                    rtl8126_mac_ocp_write(tp, 0xCDD6, 0x9003);
-                    rtl8126_mac_ocp_write(tp, 0xCDDC, 0x9003);
-                    rtl8126_mac_ocp_write(tp, 0xCDE8, 0x883E);
-                    rtl8126_mac_ocp_write(tp, 0xCDEA, 0x9003);
-                    rtl8126_mac_ocp_write(tp, 0xCDEC, 0x889C);
-                    rtl8126_mac_ocp_write(tp, 0xCDEE, 0x9003);
-                    rtl8126_mac_ocp_write(tp, 0xCDF0, 0x8C09);
-                    rtl8126_mac_ocp_write(tp, 0xCDF2, 0x9003);
-                    rtl8126_set_mac_ocp_bit(tp, 0xE032, BIT_14);
-                    rtl8126_set_mac_ocp_bit(tp, 0xE0A2, BIT_0);
-                    break;
-            case CFG_METHOD_2:
-            case CFG_METHOD_3:
-                    rtl8126_mac_ocp_write(tp, 0xCDD0, 0x9003);
-                    rtl8126_set_mac_ocp_bit(tp, 0xE034, (BIT_15 | BIT_14));
-                    rtl8126_mac_ocp_write(tp, 0xCDD2, 0x8C09);
-                    rtl8126_mac_ocp_write(tp, 0xCDD8, 0x9003);
-                    rtl8126_mac_ocp_write(tp, 0xCDD4, 0x9003);
-                    rtl8126_mac_ocp_write(tp, 0xCDDA, 0x9003);
-                    rtl8126_mac_ocp_write(tp, 0xCDD6, 0x9003);
-                    rtl8126_mac_ocp_write(tp, 0xCDDC, 0x9003);
-                    rtl8126_mac_ocp_write(tp, 0xCDE8, 0x887A);
-                    rtl8126_mac_ocp_write(tp, 0xCDEA, 0x9003);
-                    rtl8126_mac_ocp_write(tp, 0xCDEC, 0x8C09);
-                    rtl8126_mac_ocp_write(tp, 0xCDEE, 0x9003);
-                    rtl8126_mac_ocp_write(tp, 0xCDF0, 0x8A62);
-                    rtl8126_mac_ocp_write(tp, 0xCDF2, 0x9003);
-                    rtl8126_mac_ocp_write(tp, 0xCDF4, 0x883E);
-                    rtl8126_mac_ocp_write(tp, 0xCDF6, 0x9003);
-                    rtl8126_set_mac_ocp_bit(tp, 0xE032, BIT_14);
-                    rtl8126_set_mac_ocp_bit(tp, 0xE0A2, BIT_0);
-                    break;
-            }
+        case CFG_METHOD_1:
+        case CFG_METHOD_2:
+        case CFG_METHOD_3:
+            rtl8126_mac_ocp_write(tp, 0xCDD0, 0x9003);
+            csi_tmp = rtl8126_mac_ocp_read(tp, 0xE034);
+            csi_tmp |= (BIT_15 | BIT_14);
+            rtl8126_mac_ocp_write(tp, 0xE034, csi_tmp);
+            rtl8126_mac_ocp_write(tp, 0xCDD2, 0x889C);
+            rtl8126_mac_ocp_write(tp, 0xCDD8, 0x9003);
+            rtl8126_mac_ocp_write(tp, 0xCDD4, 0x8C30);
+            rtl8126_mac_ocp_write(tp, 0xCDDA, 0x9003);
+            rtl8126_mac_ocp_write(tp, 0xCDD6, 0x9003);
+            rtl8126_mac_ocp_write(tp, 0xCDDC, 0x9003);
+            rtl8126_mac_ocp_write(tp, 0xCDE8, 0x883E);
+            rtl8126_mac_ocp_write(tp, 0xCDEA, 0x9003);
+            rtl8126_mac_ocp_write(tp, 0xCDEC, 0x889C);
+            rtl8126_mac_ocp_write(tp, 0xCDEE, 0x9003);
+            rtl8126_mac_ocp_write(tp, 0xCDF0, 0x8C09);
+            rtl8126_mac_ocp_write(tp, 0xCDF2, 0x9003);
+            csi_tmp = rtl8126_mac_ocp_read(tp, 0xE032);
+            csi_tmp |= (BIT_14);
+            rtl8126_mac_ocp_write(tp, 0xE032, csi_tmp);
+            csi_tmp = rtl8126_mac_ocp_read(tp, 0xE0A2);
+            csi_tmp |= (BIT_0);
+            rtl8126_mac_ocp_write(tp, 0xE0A2, csi_tmp);
+            break;
+    }
     enablePCIOffset99();
 }
 
@@ -1142,7 +1116,7 @@ void SimpleRTL8126::hardwareD3Para()
         case CFG_METHOD_1:
         case CFG_METHOD_2:
         case CFG_METHOD_3:
-            rtl8126_mac_ocp_write(tp, 0xC0B6, rtl8126_mac_ocp_read(tp, 0xC0B6) & ~BIT_0);
+            rtl8126_mac_ocp_write(tp, 0xEA18, 0x0064);
             break;
     }
     setPCI99_180ExitDriverPara();
@@ -1254,9 +1228,9 @@ void SimpleRTL8126::powerDownPLL()
 
         if (tp->mcfg == CFG_METHOD_1 || tp->mcfg == CFG_METHOD_2 ||
             tp->mcfg == CFG_METHOD_3) {
-            rtl8126_enable_cfg9346_write(tp);
+            WriteReg8(Cfg9346, ReadReg8(Cfg9346) | Cfg9346_Unlock);
             WriteReg8(Config2, ReadReg8(Config2) | PMSTS_En);
-            rtl8126_disable_cfg9346_write(tp);
+            WriteReg8(Cfg9346, ReadReg8(Cfg9346) & ~Cfg9346_Unlock);
         }
 
         rtl8126_mdio_write(tp, 0x1F, 0x0000);
@@ -1328,7 +1302,7 @@ void SimpleRTL8126::configPhyHardware()
     
     if (HW_DASH_SUPPORT_TYPE_3(tp) && tp->HwPkgDet == 0x06) return;
     
-    //rtl8126_set_hw_phy_before_init_phy_mcu(tp);
+    rtl8126_set_hw_phy_before_init_phy_mcu(tp);
     
     rtl8126_init_hw_phy_mcu(tp);
     
@@ -1386,7 +1360,7 @@ void SimpleRTL8126::configPhyHardware8126a1()
 void SimpleRTL8126::configPhyHardware8126a2()
 {
     struct rtl8126_private *tp = &linuxData;
-
+    
     rtl8126_set_eth_phy_ocp_bit(tp, 0xA442, BIT_11);
 
 

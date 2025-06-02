@@ -85,6 +85,7 @@ bool SimpleRTL8126::init(OSDictionary *properties)
         pciDeviceData.subsystem_device = 0;
         linuxData.pci_dev = &pciDeviceData;
         pollInterval2500 = 0;
+        pollInterval5000 = 0;
         wolCapable = false;
         wolActive = false;
         enableTSO4 = false;
@@ -673,7 +674,7 @@ bool SimpleRTL8126::configureInterface(IONetworkInterface *interface)
         result = false;
         goto done;
     }
-    snprintf(modelName, kNameLenght, "Realtek %s PCIe 2.5 Gbit Ethernet", rtl_chip_info[linuxData.chipset].name);
+    snprintf(modelName, kNameLenght, "Realtek %s PCIe 5 Gbit Ethernet", rtl_chip_info[linuxData.chipset].name);
     setProperty("model", modelName);
     
     DebugLog("configureInterface() <===\n");
@@ -1275,7 +1276,8 @@ void SimpleRTL8126::checkLinkStatus()
         } else {
             flowCtl = kFlowControlOff;
         }
-        if (currLinkState & _5000bpsF){
+        
+        if (currLinkState & _5000bpsF) {
             speed = SPEED_5000;
             duplex = DUPLEX_FULL;
         } else if (currLinkState & _2500bpsF) {
@@ -1303,11 +1305,11 @@ void SimpleRTL8126::checkLinkStatus()
         }
         setupRTL8126();
         
-        if (tp->mcfg == CFG_METHOD_1) {
+        if (tp->mcfg == CFG_METHOD_2) {
             if (ReadReg16(PHYstatus) & FullDup)
-                WriteReg32(TxConfig, (ReadReg32(TxConfig) | (BIT_24 | BIT_25)) & ~BIT_19);
+                WriteReg32(TxConfig, (ReadReg32(TxConfig) | BIT_6));
             else
-                WriteReg32(TxConfig, (ReadReg32(TxConfig) | BIT_25) & ~(BIT_19 | BIT_24));
+                WriteReg32(TxConfig, (ReadReg32(TxConfig) | BIT_6));
         }
 
         if ((tp->mcfg == CFG_METHOD_1 || tp->mcfg == CFG_METHOD_2 ||
@@ -1537,7 +1539,7 @@ void SimpleRTL8126::setLinkUp()
         mediumSpeed = kSpeed5000MBit;
         speedName = speed5GName;
         duplexName = duplexFullName;
-       
+           
         if (flowCtl == kFlowControlOn) {
             mediumIndex = MEDIUM_INDEX_5000FDFC;
         } else {
@@ -1634,7 +1636,9 @@ void SimpleRTL8126::setLinkUp()
         pParams.lowThresholdBytes = 0x1000;
         pParams.highThresholdBytes = 0x10000;
         
-        if (speed == SPEED_2500 || speed == SPEED_5000)
+        if (speed == SPEED_5000)
+            pParams.pollIntervalTime = pollInterval5000;
+        else if (speed == SPEED_2500)
             pParams.pollIntervalTime = pollInterval2500;
         else if (speed == SPEED_1000)
             pParams.pollIntervalTime = 170000;   /* 170µs */

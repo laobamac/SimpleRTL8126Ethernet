@@ -1077,13 +1077,14 @@ struct ethtool_ops {
 #define SUPPORTED_Pause			(1 << 13)
 #define SUPPORTED_Asym_Pause		(1 << 14)
 #define SUPPORTED_2500baseX_Full	(1 << 15)
-#define SUPPORTED_Backplane		(1 << 16)
-#define SUPPORTED_1000baseKX_Full	(1 << 17)
-#define SUPPORTED_10000baseKX4_Full	(1 << 18)
-#define SUPPORTED_10000baseKR_Full	(1 << 19)
-#define SUPPORTED_10000baseR_FEC	(1 << 20)
-#define SUPPORTED_20000baseMLD2_Full	(1 << 21)
-#define SUPPORTED_20000baseKR2_Full	(1 << 22)
+#define SUPPORTED_5000baseX_Full    (1 << 16)
+#define SUPPORTED_Backplane		(1 << 17)
+#define SUPPORTED_1000baseKX_Full	(1 << 18)
+#define SUPPORTED_10000baseKX4_Full	(1 << 19)
+#define SUPPORTED_10000baseKR_Full	(1 << 20)
+#define SUPPORTED_10000baseR_FEC	(1 << 21)
+#define SUPPORTED_20000baseMLD2_Full	(1 << 22)
+#define SUPPORTED_20000baseKR2_Full	(1 << 23)
 
 /* Indicates what features are advertised by the interface. */
 #define ADVERTISED_10baseT_Half		(1 << 0)
@@ -1102,13 +1103,14 @@ struct ethtool_ops {
 #define ADVERTISED_Pause		(1 << 13)
 #define ADVERTISED_Asym_Pause		(1 << 14)
 #define ADVERTISED_2500baseX_Full	(1 << 15)
-#define ADVERTISED_Backplane		(1 << 16)
-#define ADVERTISED_1000baseKX_Full	(1 << 17)
-#define ADVERTISED_10000baseKX4_Full	(1 << 18)
-#define ADVERTISED_10000baseKR_Full	(1 << 19)
-#define ADVERTISED_10000baseR_FEC	(1 << 20)
-#define ADVERTISED_20000baseMLD2_Full	(1 << 21)
-#define ADVERTISED_20000baseKR2_Full	(1 << 22)
+#define ADVERTISED_5000baseX_Full    (1 << 16)
+#define ADVERTISED_Backplane		(1 << 17)
+#define ADVERTISED_1000baseKX_Full	(1 << 18)
+#define ADVERTISED_10000baseKX4_Full	(1 << 19)
+#define ADVERTISED_10000baseKR_Full	(1 << 20)
+#define ADVERTISED_10000baseR_FEC	(1 << 21)
+#define ADVERTISED_20000baseMLD2_Full	(1 << 22)
+#define ADVERTISED_20000baseKR2_Full	(1 << 23)
 
 /* The following are all involved in forcing a particular link
  * mode for the device for setting things.  When getting the
@@ -1116,11 +1118,12 @@ struct ethtool_ops {
  * it was forced up into this mode or autonegotiated.
  */
 
-/* The forced speed, 10Mb, 100Mb, gigabit, 2.5Gb, 10GbE. */
+/* The forced speed, 10Mb, 100Mb, gigabit, 2.5Gb, 2Gb, 10GbE. */
 #define SPEED_10		10
 #define SPEED_100		100
 #define SPEED_1000		1000
 #define SPEED_2500		2500
+#define SPEED_5000        5000
 #define SPEED_10000		10000
 
 /* Duplex, half or full. */
